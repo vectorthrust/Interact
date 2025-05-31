@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation";
 
@@ -6,7 +6,7 @@ export default function Hero() {
     const router = useRouter();
   
     const handleRedirect = () => {
-      router.push('/'); // Replace with your actual route
+      router.push('/agent/meta'); // Replace with your actual route
     };
 
   return (
