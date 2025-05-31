@@ -13,7 +13,7 @@ Multi-chain escrow for AI agent tasks. Users deposit native tokens, agents compl
 - **Token**: FLR
 
 ### Flow Mainnet
-- **Contract**: `[DEPLOY_ADDRESS_HERE]`
+- **Contract**: `0x63Ba4C892bD1910b2DD4F13F9B0a86f6E650A788`
 - **Token**: FLOW
 
 ## Deploy to Flow
