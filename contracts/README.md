@@ -7,14 +7,30 @@ Multi-chain escrow for AI agent tasks. Users deposit native tokens, agents compl
 ### Rootstock Testnet
 - **Contract**: `0x63Ba4C892bD1910b2DD4F13F9B0a86f6E650A788`
 - **Token**: tRBTC
+- **Explorer**: https://explorer.testnet.rootstock.io/address/0x63Ba4C892bD1910b2DD4F13F9B0a86f6E650A788
 
 ### Flare Mainnet  
 - **Contract**: `0x698AeD7013796240EE7632Bde5f67A7f2A2aA6A5`
 - **Token**: FLR
+- **Explorer**: https://flare-explorer.flare.network/address/0x698AeD7013796240EE7632Bde5f67A7f2A2aA6A5
 
 ### Flow Mainnet
 - **Contract**: `0x63Ba4C892bD1910b2DD4F13F9B0a86f6E650A788`
 - **Token**: FLOW
+- **Explorer**: https://evm.flowscan.io/address/0x63Ba4C892bD1910b2DD4F13F9B0a86f6E650A788
+
+## Quick Test
+
+```bash
+# Test with Rootstock Testnet (needs tRBTC)
+npx hardhat run create_test_task.js --network rootstock-testnet
+
+# Test with Flow Mainnet (needs FLOW)
+npx hardhat run create_test_task.js --network flow-mainnet
+
+# Read contract state (no tokens needed)
+node test_escrow_cli.js
+```
 
 ## Deploy to Flow
 
