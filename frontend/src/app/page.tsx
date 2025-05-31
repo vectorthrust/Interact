@@ -6,7 +6,7 @@ export default function Home() {
     <div className="">
         <Hero/>
         <div className="absolute bottom-0 left-0 mb-4 ml-4 text-sm text-gray-500">
-          <span><b>Built</b> with ❤️ by Hitarth & Ali</span>
+          <span><b>Built</b> with ❤️ by Hitarth, Divyansh, & Ali</span>
         </div>
         <div className="absolute bottom-0 right-0 mb-4 mr-4 text-sm text-gray-500">
           <span><b>Powered</b> by Flare

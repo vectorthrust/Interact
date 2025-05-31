@@ -15,15 +15,15 @@ export default function Hero() {
         <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8">
           Interact
           <img
-          src=""
+          src="https://i.imgur.com/ZjRjDD6.png"
           alt="icon"
-          className="inline-block w-8 h-8 align-super ml-1 mb-3"
+          className="inline-block w-18 h-18 ml-3 mb-3"
         />
           <br />
-          <span className="text-[#ff008c]">Decentralized fiat off ramps</span>
+          <span className="text-[#ff008c]">Effortless real-world utility</span>
         </h1>
-        <p className="max-w-2xl mx-auto text-lg sm:text-xl text-gray-400 mb-10">
-        Interact
+        <p className=" mx-auto text-lg sm:text-xl text-gray-400 mb-10">
+        From crypto to real-world actions and transactions in seconds, all powered by AI.
         </p>
         <Button onClick={handleRedirect} className="relative group px-8 py-6 text-lg hover:opacity-90">
           <span className="relative z-10">Get started</span>
