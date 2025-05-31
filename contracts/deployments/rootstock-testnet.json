@@ -3,13 +3,14 @@
   "chainId": 31,
   "deployer": "0x59524219693A999Fa9087db79b485b99aC935606",
   "environment": "testnet",
-  "timestamp": "2025-05-31T15:50:08.424Z",
+  "timestamp": "2025-05-31T17:28:30.594Z",
   "contracts": {
-    "TaskEscrow": "0x63Ba4C892bD1910b2DD4F13F9B0a86f6E650A788"
+    "TaskEscrow": "0xD0691D231a04E747E6813B0d05471EAC8B4961B1",
+    "FTSOOracle": null
   },
   "configuration": {
     "simpleEscrow": true,
-    "noFees": true,
+    "ftsoIntegration": false,
     "isPrimaryNetwork": true
   }
 }
