@@ -1,0 +1,16 @@
+{
+  "network": "Flow Mainnet",
+  "chainId": 747,
+  "deployer": "0x59524219693A999Fa9087db79b485b99aC935606",
+  "environment": "production",
+  "timestamp": "2025-05-31T17:12:15.132Z",
+  "contracts": {
+    "TaskEscrow": "0x63Ba4C892bD1910b2DD4F13F9B0a86f6E650A788",
+    "FTSOOracle": null
+  },
+  "configuration": {
+    "simpleEscrow": true,
+    "ftsoIntegration": false,
+    "isPrimaryNetwork": true
+  }
+}

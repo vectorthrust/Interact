@@ -1,0 +1,77 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/Users/hitarthkhurana/Documents/Interact/contracts/contracts/FTSOPriceOracle.sol": {
+      "lastModificationDate": 1748707243130,
+      "contentHash": "c98c41799c731c9c70831750f03c27ce",
+      "sourceName": "contracts/FTSOPriceOracle.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.8.0 <0.9.0"
+      ],
+      "artifacts": [
+        "FTSOPriceOracle",
+        "IContractRegistry",
+        "IFtsoV2Interface"
+      ]
+    },
+    "/Users/hitarthkhurana/Documents/Interact/contracts/contracts/TaskEscrow.sol": {
+      "lastModificationDate": 1748706807868,
+      "contentHash": "4a718f971d2962a32677ce399544ff6c",
+      "sourceName": "contracts/TaskEscrow.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "TaskEscrow"
+      ]
+    }
+  }
+}
