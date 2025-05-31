@@ -1,0 +1,16 @@
+{
+  "network": "Flare Mainnet",
+  "chainId": 14,
+  "deployer": "0x59524219693A999Fa9087db79b485b99aC935606",
+  "environment": "production",
+  "timestamp": "2025-05-31T16:11:31.536Z",
+  "contracts": {
+    "TaskEscrow": "0x698AeD7013796240EE7632Bde5f67A7f2A2aA6A5",
+    "FTSOOracle": "0x96094A64F390470160f202921DfE360754a02185"
+  },
+  "configuration": {
+    "simpleEscrow": true,
+    "ftsoIntegration": true,
+    "isPrimaryNetwork": true
+  }
+}
