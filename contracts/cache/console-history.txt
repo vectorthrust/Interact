@@ -1,0 +1,8 @@
+exit
+q
+npx hardhat run debug_task_hedera.js --network hedera-testnet
+q
+npx hardhat run debug_task_hedera.js --network hedera-testnet
+q
+npx hardhat run debug_task_hedera.js --network hedera-testnet
+q

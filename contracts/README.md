@@ -4,10 +4,11 @@ Multi-chain escrow for AI agent tasks. Users deposit native tokens, agents compl
 
 ## Deployed Contracts
 
-### Rootstock Testnet
-- **Contract**: `0x63Ba4C892bD1910b2DD4F13F9B0a86f6E650A788`
-- **Token**: tRBTC
-- **Explorer**: https://explorer.testnet.rootstock.io/address/0x63Ba4C892bD1910b2DD4F13F9B0a86f6E650A788
+### Hedera Testnet 🚀 NEW!
+- **Contract**: `0x0Cba9f72f0b55b59E9F92432626E9D9A9Bc419e8`
+- **Token**: HBAR (Testnet)
+- **Explorer**: https://hashscan.io/testnet/contract/0x0Cba9f72f0b55b59E9F92432626E9D9A9Bc419e8
+- **Gas**: 540 gwei minimum, ~$0.0001 per transaction
 
 ### Flare Mainnet  
 - **Contract**: `0x698AeD7013796240EE7632Bde5f67A7f2A2aA6A5`
@@ -19,22 +20,22 @@ Multi-chain escrow for AI agent tasks. Users deposit native tokens, agents compl
 - **Token**: FLOW
 - **Explorer**: https://evm.flowscan.io/address/0x63Ba4C892bD1910b2DD4F13F9B0a86f6E650A788
 
-## Quick Test
+## Quick Test - Hedera Testnet
 
 ```bash
-# Test with Rootstock Testnet (needs tRBTC)
-npx hardhat run create_test_task.js --network rootstock-testnet
-
-# Test with Flow Mainnet (needs FLOW)
-npx hardhat run create_test_task.js --network flow-mainnet
-
-# Read contract state (no tokens needed)
-node test_escrow_cli.js
+# Test complete workflow on Hedera
+npx hardhat run create_test_task_fixed.js --network hedera-testnet
+npx hardhat run agent_complete_task_custom.js --network hedera-testnet
+npx hardhat run user_verify_and_pay.js --network hedera-testnet
 ```
 
-## Deploy to Flow
+## Deploy to New Networks
 
 ```bash
+# Hedera Testnet
+npx hardhat run deploy_hedera.js --network hedera-testnet
+
+# Flow Mainnet
 npx hardhat run scripts/deploy.js --network flow-mainnet
 ```
 

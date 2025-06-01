@@ -51,6 +51,15 @@ const NETWORK_CONFIG = {
     currency: "RBTC",
     chainId: 30,
   },
+  // Hedera Testnet - Low-cost deployment option
+  "hedera-testnet": {
+    name: "Hedera Testnet",
+    isProduction: false,
+    currency: "HBAR",
+    explorer: "https://hashscan.io/testnet/",
+    faucet: "https://portal.hedera.com/faucet",
+    chainId: 296,
+  },
 };
 
 // Primary deployment targets
@@ -163,6 +172,13 @@ async function main() {
     console.log("🧪 Flare Testnet (FTSO Testing):");
     console.log("1. 💰 Get C2FLR: https://coston2-faucet.towolabs.com/");
     console.log("2. 🧪 Test FTSO price feeds");
+    console.log("3. 🔍 Explorer:", config.explorer);
+  }
+
+  if (networkName === "hedera-testnet") {
+    console.log("⚡ Hedera Testnet (Super Low Cost!):");
+    console.log("1. 💰 Get HBAR: https://portal.hedera.com/faucet");
+    console.log("2. 💵 Ultra-low gas fees (~$0.0001)");
     console.log("3. 🔍 Explorer:", config.explorer);
   }
 

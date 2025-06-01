@@ -4,7 +4,7 @@ require("hardhat-gas-reporter");
 require("solidity-coverage");
 require("dotenv").config();
 
-const { PRIVATE_KEY, INFURA_API_KEY, ETHERSCAN_API_KEY } = process.env;
+const { PRIVATE_KEY, HEDERA_PRIVATE_KEY, INFURA_API_KEY, ETHERSCAN_API_KEY } = process.env;
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -65,6 +65,14 @@ module.exports = {
       url: "https://flare-api.flare.network/ext/C/rpc",
       chainId: 14,
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
+    },
+    // Hedera Testnet
+    "hedera-testnet": {
+      url: "https://testnet.hashio.io/api",
+      chainId: 296,
+      accounts: HEDERA_PRIVATE_KEY ? [HEDERA_PRIVATE_KEY] : [],
+      gasPrice: 540000000000, // 540 gwei (Hedera minimum)
+      gas: 3000000,
     },
   },
   etherscan: {
