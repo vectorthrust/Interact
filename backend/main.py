@@ -44,13 +44,14 @@ async def websocket_agent(websocket: WebSocket):
         if data["taskType"] == "flight":
             toCity = data["details"]["toCity"]
             fromCity = data["details"]["fromCity"]
+            date = data["details"]["date"]
             firstName = data["details"]["firstName"]
             lastName = data["details"]["lastName"]
             dateOfBirth = data["details"]["dateOfBirth"]
             email = data["details"]["email"]
             phoneNumber = data["details"]["phoneNumber"]
 
-            formattedTask = flightTemplate(toCity, fromCity, firstName, lastName, dateOfBirth, email, phoneNumber)
+            formattedTask = flightTemplate(toCity, fromCity, date, firstName, lastName, dateOfBirth, email, phoneNumber)
 
         agent = Agent(
         task=formattedTask,

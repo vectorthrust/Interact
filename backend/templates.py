@@ -27,7 +27,7 @@ def flightTemplate(toCity, fromCity, date, firstName, lastName, dateOfBirth, ema
      task=f'''
         1. Go to www.lufthansa.com/cz/en/homepage
         2. On the "Round trip" drop down click it and select "One-way" instead
-        3. Click the text input below "From" if it is filled with Prague press the delete x button once the input is cleared enter {fromCity} and press enter
+        3. Click the text input below "From" if it is filled with Frankfurt press the delete x button once the input is cleared enter {fromCity} and press enter
         4. Click the To text input and type {toCity} then press enter
         5. Click on the "Departure" button
         6. Click on the date {date} then scroll down and then click on the "Continue" button
