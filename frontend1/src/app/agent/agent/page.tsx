@@ -71,10 +71,12 @@ export default function AgentPage() {
 
     // Get stored order data from localStorage
     const storedOrder = localStorage.getItem('currentOrder');
-    if (!storedOrder) {
+    const storedFlight = localStorage.getItem('currentFlight');
+    
+    if (!storedOrder && !storedFlight) {
       const errorLog: LogUpdate = {
         id: `log-${Date.now()}`,
-        message: "No order data found. Please place an order first.",
+        message: "No booking data found. Please make a booking first.",
         timestamp: new Date(),
       };
       setLogs((prev) => [...prev, errorLog]);
@@ -83,20 +85,28 @@ export default function AgentPage() {
       return;
     }
 
-    const orderData = JSON.parse(storedOrder);
-
     // Create the websocket connection
     const socket = new WebSocket("ws://127.0.0.1:8000/ws/agent");
     socketRef.current = socket;
 
     socket.onopen = () => {
-      // Send the actual order data
-      const initialData = {
+      // Send the booking data
+      const initialData = storedFlight ? {
+        taskType: "flight",
+        details: {
+          from: JSON.parse(storedFlight).from,
+          to: JSON.parse(storedFlight).to,
+          date: JSON.parse(storedFlight).date,
+          dateOfBirth: JSON.parse(storedFlight).dateOfBirth,
+          email: JSON.parse(storedFlight).email,
+          phone: JSON.parse(storedFlight).phone
+        }
+      } : {
         taskType: "food",
         details: {
-          address: orderData.address,
-          restaurantName: orderData.restaurantName,
-          item: orderData.item
+          address: JSON.parse(storedOrder!).address,
+          restaurantName: JSON.parse(storedOrder!).restaurantName,
+          item: JSON.parse(storedOrder!).item
         }
       };
       socket.send(JSON.stringify(initialData));

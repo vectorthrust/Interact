@@ -11,8 +11,9 @@ interface FlightDetails {
   from: string;
   to: string;
   date: string;
-  passengers: string;
-  class: string;
+  dateOfBirth: string;
+  email: string;
+  phone: string;
 }
 
 interface StoredFlight extends FlightDetails {
@@ -27,8 +28,9 @@ export default function FlightBookingPage() {
     from: '',
     to: '',
     date: '',
-    passengers: '1',
-    class: 'Economy'
+    dateOfBirth: '',
+    email: '',
+    phone: ''
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -48,16 +50,26 @@ export default function FlightBookingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!flightDetails.from || !flightDetails.to || !flightDetails.date) {
+    if (!flightDetails.from || !flightDetails.to || !flightDetails.date || 
+        !flightDetails.dateOfBirth || !flightDetails.email || !flightDetails.phone) {
       alert('Please fill in all required fields');
       return;
     }
 
     setIsLoading(true);
     try {
-      // Store flight details in localStorage
+      // Format dates
+      const flightDate = new Date(flightDetails.date);
+      const formattedFlightDate = `${flightDate.toLocaleString('default', { month: 'long' })} ${flightDate.getDate()}`;
+      
+      const dob = new Date(flightDetails.dateOfBirth);
+      const formattedDOB = `${dob.getDate().toString().padStart(2, '0')}${(dob.getMonth() + 1).toString().padStart(2, '0')}${dob.getFullYear()}`;
+
+      // Store flight details in localStorage with formatted dates
       const flightData: StoredFlight = {
         ...flightDetails,
+        date: formattedFlightDate, // e.g., "June 3"
+        dateOfBirth: formattedDOB, // e.g., "30112006"
         timestamp: new Date().toISOString(),
         status: 'pending'
       };
@@ -73,7 +85,7 @@ export default function FlightBookingPage() {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFlightDetails(prev => ({
       ...prev,
@@ -187,7 +199,7 @@ export default function FlightBookingPage() {
                       className="block text-sm font-medium mb-1"
                       style={{ color: themeColors.text }}
                     >
-                      Date
+                      Flight Date
                     </label>
                     <input
                       type="date"
@@ -209,20 +221,19 @@ export default function FlightBookingPage() {
 
                   <div>
                     <label 
-                      htmlFor="passengers" 
+                      htmlFor="dateOfBirth" 
                       className="block text-sm font-medium mb-1"
                       style={{ color: themeColors.text }}
                     >
-                      Number of Passengers
+                      Date of Birth
                     </label>
                     <input
-                      type="number"
-                      id="passengers"
-                      name="passengers"
-                      value={flightDetails.passengers}
+                      type="date"
+                      id="dateOfBirth"
+                      name="dateOfBirth"
+                      value={flightDetails.dateOfBirth}
                       onChange={handleInputChange}
-                      min="1"
-                      max="9"
+                      max={today}
                       className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2"
                       style={{
                         backgroundColor: themeColors.background === '#F8F8F8' ? '#F0F0F0' : '#2A2A2A',
@@ -230,21 +241,23 @@ export default function FlightBookingPage() {
                         borderColor: themeColors.text + '20',
                         borderWidth: '1px'
                       }}
+                      required
                     />
                   </div>
 
                   <div>
                     <label 
-                      htmlFor="class" 
+                      htmlFor="email" 
                       className="block text-sm font-medium mb-1"
                       style={{ color: themeColors.text }}
                     >
-                      Class
+                      Email
                     </label>
-                    <select
-                      id="class"
-                      name="class"
-                      value={flightDetails.class}
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={flightDetails.email}
                       onChange={handleInputChange}
                       className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2"
                       style={{
@@ -253,12 +266,35 @@ export default function FlightBookingPage() {
                         borderColor: themeColors.text + '20',
                         borderWidth: '1px'
                       }}
+                      placeholder="Enter your email"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label 
+                      htmlFor="phone" 
+                      className="block text-sm font-medium mb-1"
+                      style={{ color: themeColors.text }}
                     >
-                      <option value="Economy">Economy</option>
-                      <option value="Premium Economy">Premium Economy</option>
-                      <option value="Business">Business</option>
-                      <option value="First">First</option>
-                    </select>
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      value={flightDetails.phone}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2"
+                      style={{
+                        backgroundColor: themeColors.background === '#F8F8F8' ? '#F0F0F0' : '#2A2A2A',
+                        color: themeColors.text,
+                        borderColor: themeColors.text + '20',
+                        borderWidth: '1px'
+                      }}
+                      placeholder="Enter your phone number"
+                      required
+                    />
                   </div>
                 </div>
 
