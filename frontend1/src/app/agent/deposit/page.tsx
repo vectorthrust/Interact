@@ -46,7 +46,7 @@ export default function OnRampCard() {
       case 'flare':
         return {
           name: 'FLR',
-          minAmount: '0.1',
+          minAmount: '0.01',
           network: 'Flare Network',
           chainId: '0xE', // Chain ID 14
           rpcUrl: 'https://flare-api.flare.network/ext/C/rpc',
