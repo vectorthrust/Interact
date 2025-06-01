@@ -42,8 +42,15 @@ async def websocket_agent(websocket: WebSocket):
 
             formattedTask = foodTemplate(address, restaurantName, item)
         if data["taskType"] == "flight":
+            toCity = data["details"]["toCity"]
+            fromCity = data["details"]["fromCity"]
+            firstName = data["details"]["firstName"]
+            lastName = data["details"]["lastName"]
+            dateOfBirth = data["details"]["dateOfBirth"]
+            email = data["details"]["email"]
+            phoneNumber = data["details"]["phoneNumber"]
 
-            formattedTask = flightTemplate()
+            formattedTask = flightTemplate(toCity, fromCity, firstName, lastName, dateOfBirth, email, phoneNumber)
 
         agent = Agent(
         task=formattedTask,
