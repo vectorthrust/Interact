@@ -6,9 +6,11 @@ import { FaUtensils } from 'react-icons/fa';
 import { ChevronLeft } from 'lucide-react';
 import { useTheme } from "@/app/providers";
 import Footer from '@/app/components/Footer';
+import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 
 interface OrderDetails {
   address: string;
+  addressCoords?: [number, number];
   restaurantName: string;
   item: string;
 }
@@ -90,6 +92,14 @@ export default function FoodDeliveryPage() {
     }));
   };
 
+  const handleAddressSelect = (address: string, coords: [number, number]) => {
+    setOrderDetails(prev => ({
+      ...prev,
+      address: address,
+      addressCoords: coords
+    }));
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: themeColors.background }}>
       <div className="container mx-auto px-4 py-8">
@@ -146,21 +156,9 @@ export default function FoodDeliveryPage() {
                     >
                       Delivery Address
                     </label>
-                    <input
-                      type="text"
-                      id="address"
-                      name="address"
-                      value={orderDetails.address}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2"
-                      style={{
-                        backgroundColor: themeColors.background === '#F8F8F8' ? '#F0F0F0' : '#2A2A2A',
-                        color: themeColors.text,
-                        borderColor: themeColors.text + '20',
-                        borderWidth: '1px'
-                      }}
-                      placeholder="Enter your delivery address"
-                      required
+                    <AddressAutocomplete
+                      onSelect={handleAddressSelect}
+                      placeholder="Search for your delivery address"
                     />
                   </div>
 

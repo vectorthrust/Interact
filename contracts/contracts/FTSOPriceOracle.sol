@@ -2,18 +2,18 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 // Official Flare imports for mainnet
-interface IFtsoV2Interface {
-    function getFeedById(bytes21 _feedId) external view returns (
-        uint256 _feedValue,
-        int8 _decimals,
-        uint64 _timestamp
-    );
+    interface IFtsoV2Interface {
+        function getFeedById(bytes21 _feedId) external view returns (
+            uint256 _feedValue,
+            int8 _decimals,
+            uint64 _timestamp
+        );
     
     function getFeedByIdInWei(bytes21 _feedId) external view returns (
         uint256 _feedValue,
         uint64 _timestamp
     );
-}
+    }
 
 // Simplified ContractRegistry interface
 interface IContractRegistry {
@@ -42,7 +42,7 @@ contract FTSOPriceOracle {
     /**
      * @dev Get BTC/USD price using official Flare FTSO
      * @return price The price in USD
-     * @return decimals Number of decimal places  
+     * @return decimals Number of decimal places
      * @return timestamp Last update timestamp
      */
     function getBtcPrice() external view returns (

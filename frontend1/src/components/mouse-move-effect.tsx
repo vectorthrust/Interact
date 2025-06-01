@@ -1,13 +1,20 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTheme } from "@/app/providers"
 
 export function MouseMoveEffect() {
   const { themeColors } = useTheme()
   const containerRef = useRef<HTMLDivElement>(null)
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isMounted) return
+    
     const container = containerRef.current
     if (!container) return
 
@@ -41,7 +48,12 @@ export function MouseMoveEffect() {
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('mouseleave', handleMouseLeave)
     }
-  }, [themeColors.primary])
+  }, [themeColors.primary, isMounted])
+
+  // Don't render anything during SSR to prevent hydration mismatch
+  if (!isMounted) {
+    return null
+  }
 
   return (
     <div

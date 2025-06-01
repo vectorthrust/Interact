@@ -8,12 +8,41 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Play, Square, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { useTheme } from "@/app/providers";
 import Footer from '@/app/components/Footer';
+import { ethers } from 'ethers';
 
 interface LogUpdate {
   id: string;
   message: string;
   timestamp: Date;
 }
+
+// TaskEscrow ABI for agent completion
+const TASK_ESCROW_ABI = [
+  "function completeTask(uint256 taskId) external",
+  "function nextTaskId() external view returns (uint256)",
+  "function tasks(uint256) external view returns (address user, address agent, uint256 amount, string description, uint8 status, uint256 createdAt, uint256 completedAt)"
+];
+
+// Agent private keys for each chain
+const AGENT_PRIVATE_KEYS = {
+  hedera: "e359cbe13b7a9f96a74e31c89a1010267c1b44f1a349197b762262e2ed12a56d",
+  flare: "b2e30c6bceb3e31951d7c88bca4cb97e539bafa61795df4921f02239ea115d75",
+  flow: "b2e30c6bceb3e31951d7c88bca4cb97e539bafa61795df4921f02239ea115d75"
+};
+
+// Contract addresses
+const ESCROW_CONTRACTS = {
+  hedera: "0x0Cba9f72f0b55b59E9F92432626E9D9A9Bc419e8",
+  flare: "0x698AeD7013796240EE7632Bde5f67A7f2A2aA6A5",
+  flow: "0x63Ba4C892bD1910b2DD4F13F9B0a86f6E650A788"
+};
+
+// RPC URLs
+const RPC_URLS = {
+  hedera: "https://testnet.hashio.io/api",
+  flare: "https://flare-api.flare.network/ext/C/rpc",
+  flow: "https://mainnet.evm.nodes.onflow.org"
+};
 
 export default function AgentPage() {
   const router = useRouter();
@@ -32,7 +61,7 @@ export default function AgentPage() {
   };
 
   const handleNext = () => {
-    router.push('/agent/meta');
+    router.push('/services/order-complete');
   };
 
   const startAgent = () => {
@@ -73,7 +102,7 @@ export default function AgentPage() {
       socket.send(JSON.stringify(initialData));
     };
 
-    socket.onmessage = (event) => {
+    socket.onmessage = async (event) => {
       const data = JSON.parse(event.data);
 
       // Backend sends either logs or final done message
@@ -89,10 +118,36 @@ export default function AgentPage() {
       if (data.status === "done") {
         const doneLog: LogUpdate = {
           id: `log-${Date.now()}`,
-          message: "Agent task completed successfully!",
+          message: "Agent task completed successfully! Calling escrow contract...",
           timestamp: new Date(),
         };
         setLogs((prev) => [...prev, doneLog]);
+
+        try {
+          // Call agent complete task on the blockchain
+          await callAgentCompleteTask(theme);
+          
+          const contractLog: LogUpdate = {
+            id: `log-${Date.now()}`,
+            message: "✅ Escrow contract updated - task marked as completed!",
+            timestamp: new Date(),
+          };
+          setLogs((prev) => [...prev, contractLog]);
+
+          // Wait a moment then redirect to order complete
+          setTimeout(() => {
+            router.push('/services/order-complete');
+          }, 2000);
+
+        } catch (error) {
+          const errorLog: LogUpdate = {
+            id: `log-${Date.now()}`,
+            message: `❌ Failed to update escrow contract: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            timestamp: new Date(),
+          };
+          setLogs((prev) => [...prev, errorLog]);
+        }
+
         setIsRunning(false);
         setStatus("completed");
         socket.close();
@@ -144,6 +199,59 @@ export default function AgentPage() {
       }
     }
   }, [logs]);
+
+  // Function to call agent complete task on the appropriate chain
+  const callAgentCompleteTask = async (theme: string) => {
+    try {
+      const contractAddress = ESCROW_CONTRACTS[theme as keyof typeof ESCROW_CONTRACTS];
+      const privateKey = AGENT_PRIVATE_KEYS[theme as keyof typeof AGENT_PRIVATE_KEYS];
+      const rpcUrl = RPC_URLS[theme as keyof typeof RPC_URLS];
+
+      if (!contractAddress || !privateKey || !rpcUrl) {
+        throw new Error(`Unsupported chain: ${theme}`);
+      }
+
+      const provider = new ethers.JsonRpcProvider(rpcUrl);
+      const wallet = new ethers.Wallet(privateKey, provider);
+      
+      const escrow = new ethers.Contract(contractAddress, TASK_ESCROW_ABI, wallet);
+      
+      // Get the latest task ID (assuming it's the one we just created)
+      const nextTaskId = await escrow.nextTaskId();
+      const taskId = nextTaskId - 1n; // Latest task ID
+
+      console.log(`🤖 Agent completing task ${taskId} on ${theme}...`);
+
+      let tx;
+      if (theme === 'hedera') {
+        // Hedera requires specific gas settings
+        tx = await escrow.completeTask(taskId, {
+          gasLimit: 200000,
+          gasPrice: ethers.parseUnits("540", "gwei")
+        });
+      } else {
+        // Standard gas for other chains
+        tx = await escrow.completeTask(taskId);
+      }
+
+      console.log(`⏳ Agent completion transaction sent: ${tx.hash}`);
+      await tx.wait();
+      console.log(`✅ Agent marked task ${taskId} as completed on ${theme}`);
+
+      // Store completion info for the order complete page
+      localStorage.setItem('taskCompleted', JSON.stringify({
+        taskId: taskId.toString(),
+        completionTx: tx.hash,
+        chain: theme,
+        timestamp: new Date().toISOString()
+      }));
+
+      return true;
+    } catch (error) {
+      console.error(`❌ Error completing task on ${theme}:`, error);
+      throw error;
+    }
+  };
 
   return (
     <div className="h-screen w-screen flex items-center justify-center" style={{ backgroundColor: themeColors.background }}>

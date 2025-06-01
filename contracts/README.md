@@ -137,9 +137,10 @@ const FTSO_MAINNET = "0x7BDE3Df0624114eDB3A67dFe6753e62f4e7c1d20";
 const FTSO_TESTNET = "0x3d893C53D9e8056135C26C8c638B76C8b60Df726";
 
 // Feed IDs  
-const BTC_USD = "0x014254432f55534400000000000000000000000000";
-const FLR_USD = "0x01464c522f55534400000000000000000000000000";
-const ETH_USD = "0x014554482f55534400000000000000000000000000";
+const HBAR_USD = "0x01484241522f555344000000000000000000000000"; // Hedera
+const FLR_USD = "0x01464c522f55534400000000000000000000000000";   // Flare
+const BTC_USD = "0x014254432f55534400000000000000000000000000";   // Bitcoin
+const ETH_USD = "0x014554482f55534400000000000000000000000000";   // Ethereum
 
 // Get token amount for USD
 async function getTokenAmountForUSD(usdAmount, feedId) {
@@ -155,10 +156,10 @@ async function getTokenAmountForUSD(usdAmount, feedId) {
 ## Contract Usage Examples
 
 ```javascript
-// Rootstock (calculate tRBTC for $15 USD)
-const rootstock = new ethers.Contract("0x63Ba4C892bD1910b2DD4F13F9B0a86f6E650A788", escrowABI, signer);
-const btcAmount = await getTokenAmountForUSD(15, BTC_USD);
-const taskId = await rootstock.createTask("Order pizza", [], { value: ethers.utils.parseEther(btcAmount) });
+// Hedera (calculate HBAR for $15 USD)
+const hedera = new ethers.Contract("0x0Cba9f72f0b55b59E9F92432626E9D9A9Bc419e8", escrowABI, signer);
+const hbarAmount = await getTokenAmountForUSD(15, HBAR_USD);
+const taskId = await hedera.createTask("Order pizza", [], { value: ethers.utils.parseEther(hbarAmount) });
 
 // Flare (calculate FLR for $15 USD)
 const flare = new ethers.Contract("0x698AeD7013796240EE7632Bde5f67A7f2A2aA6A5", escrowABI, signer);
@@ -166,7 +167,7 @@ const flrAmount = await getTokenAmountForUSD(15, FLR_USD);
 await flare.createTask("Book flight", [], { value: ethers.utils.parseEther(flrAmount) });
 
 // Flow (manual FLOW amount)
-const flow = new ethers.Contract("[DEPLOY_ADDRESS_HERE]", escrowABI, signer);
+const flow = new ethers.Contract("0x63Ba4C892bD1910b2DD4F13F9B0a86f6E650A788", escrowABI, signer);
 await flow.createTask("Buy NFT", [], { value: ethers.utils.parseEther("15") });
 ```
 

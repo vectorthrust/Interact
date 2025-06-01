@@ -5,4 +5,11 @@ interface Window {
     removeListener: (eventName: string, handler: (...args: any[]) => void) => void;
     isMetaMask?: boolean;
   };
+  hashpack?: {
+    connectToLocalWallet: () => Promise<{
+      success: boolean;
+      accountIds: string[];
+      networkId?: string;
+    }>;
+  };
 } 
