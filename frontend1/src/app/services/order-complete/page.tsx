@@ -61,11 +61,6 @@ export default function OrderComplete() {
       return;
     }
 
-    if (!window.ethereum) {
-      alert('Please install MetaMask to verify and pay.');
-      return;
-    }
-
     setIsVerifying(true);
 
     try {
@@ -74,10 +69,23 @@ export default function OrderComplete() {
         throw new Error(`Unsupported chain: ${taskInfo.chain}`);
       }
 
-      // Connect wallet
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
+      let signer;
+      if (taskInfo.chain === 'hedera') {
+        // For Hedera: Use hardcoded private key instead of MetaMask
+        const HEDERA_PRIVATE_KEY = "e359cbe13b7a9f96a74e31c89a1010267c1b44f1a349197b762262e2ed12a56d";
+        const provider = new ethers.JsonRpcProvider("https://testnet.hashio.io/api");
+        signer = new ethers.Wallet(HEDERA_PRIVATE_KEY, provider);
+        console.log('Using Hedera private key for verify and pay');
+      } else {
+        // For other networks: Use MetaMask
+        if (!window.ethereum) {
+          alert('Please install MetaMask to verify and pay.');
+          return;
+        }
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+      }
 
       const escrow = new ethers.Contract(contractAddress, TASK_ESCROW_ABI, signer);
 

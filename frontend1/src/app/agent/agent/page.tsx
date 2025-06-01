@@ -86,7 +86,7 @@ export default function AgentPage() {
     }
 
     // Create the websocket connection
-    const socket = new WebSocket("ws://127.0.0.1:8000/ws/agent");
+    const socket = new WebSocket("ws://b989-185-176-138-17.ngrok-free.app/ws/agent");
     socketRef.current = socket;
 
     socket.onopen = () => {
