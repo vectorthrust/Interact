@@ -94,12 +94,14 @@ export default function AgentPage() {
       const initialData = storedFlight ? {
         taskType: "flight",
         details: {
-          from: JSON.parse(storedFlight).from,
-          to: JSON.parse(storedFlight).to,
+          fromCity: JSON.parse(storedFlight).fromCity,
+          toCity: JSON.parse(storedFlight).toCity,
           date: JSON.parse(storedFlight).date,
+          firstName: JSON.parse(storedFlight).firstName,
+          lastName: JSON.parse(storedFlight).lastName,
           dateOfBirth: JSON.parse(storedFlight).dateOfBirth,
           email: JSON.parse(storedFlight).email,
-          phone: JSON.parse(storedFlight).phone
+          phoneNumber: JSON.parse(storedFlight).phoneNumber
         }
       } : {
         taskType: "food",

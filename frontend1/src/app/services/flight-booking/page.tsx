@@ -8,12 +8,14 @@ import { useTheme } from "@/app/providers";
 import Footer from '@/app/components/Footer';
 
 interface FlightDetails {
-  from: string;
-  to: string;
+  fromCity: string;
+  toCity: string;
   date: string;
+  firstName: string;
+  lastName: string;
   dateOfBirth: string;
   email: string;
-  phone: string;
+  phoneNumber: string;
 }
 
 interface StoredFlight extends FlightDetails {
@@ -25,12 +27,14 @@ export default function FlightBookingPage() {
   const router = useRouter();
   const { themeColors, theme } = useTheme();
   const [flightDetails, setFlightDetails] = useState<FlightDetails>({
-    from: '',
-    to: '',
+    fromCity: '',
+    toCity: '',
     date: '',
+    firstName: '',
+    lastName: '',
     dateOfBirth: '',
     email: '',
-    phone: ''
+    phoneNumber: ''
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -50,8 +54,8 @@ export default function FlightBookingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!flightDetails.from || !flightDetails.to || !flightDetails.date || 
-        !flightDetails.dateOfBirth || !flightDetails.email || !flightDetails.phone) {
+    if (!flightDetails.fromCity || !flightDetails.toCity || !flightDetails.date || 
+        !flightDetails.dateOfBirth || !flightDetails.email || !flightDetails.phoneNumber) {
       alert('Please fill in all required fields');
       return;
     }
@@ -143,7 +147,7 @@ export default function FlightBookingPage() {
                 <div className="space-y-4">
                   <div>
                     <label 
-                      htmlFor="from" 
+                      htmlFor="fromCity" 
                       className="block text-sm font-medium mb-1"
                       style={{ color: themeColors.text }}
                     >
@@ -151,9 +155,9 @@ export default function FlightBookingPage() {
                     </label>
                     <input
                       type="text"
-                      id="from"
-                      name="from"
-                      value={flightDetails.from}
+                      id="fromCity"
+                      name="fromCity"
+                      value={flightDetails.fromCity}
                       onChange={handleInputChange}
                       className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2"
                       style={{
@@ -169,7 +173,7 @@ export default function FlightBookingPage() {
 
                   <div>
                     <label 
-                      htmlFor="to" 
+                      htmlFor="toCity" 
                       className="block text-sm font-medium mb-1"
                       style={{ color: themeColors.text }}
                     >
@@ -177,9 +181,9 @@ export default function FlightBookingPage() {
                     </label>
                     <input
                       type="text"
-                      id="to"
-                      name="to"
-                      value={flightDetails.to}
+                      id="toCity"
+                      name="toCity"
+                      value={flightDetails.toCity}
                       onChange={handleInputChange}
                       className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2"
                       style={{
@@ -189,6 +193,58 @@ export default function FlightBookingPage() {
                         borderWidth: '1px'
                       }}
                       placeholder="Enter destination city"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label 
+                      htmlFor="firstName" 
+                      className="block text-sm font-medium mb-1"
+                      style={{ color: themeColors.text }}
+                    >
+                      First Name
+                    </label>
+                    <input
+                      type="text"
+                      id="firstName"
+                      name="firstName"
+                      value={flightDetails.firstName}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2"
+                      style={{
+                        backgroundColor: themeColors.background === '#F8F8F8' ? '#F0F0F0' : '#2A2A2A',
+                        color: themeColors.text,
+                        borderColor: themeColors.text + '20',
+                        borderWidth: '1px'
+                      }}
+                      placeholder="Enter your first name"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label 
+                      htmlFor="lastName" 
+                      className="block text-sm font-medium mb-1"
+                      style={{ color: themeColors.text }}
+                    >
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      id="lastName"
+                      name="lastName"
+                      value={flightDetails.lastName}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2"
+                      style={{
+                        backgroundColor: themeColors.background === '#F8F8F8' ? '#F0F0F0' : '#2A2A2A',
+                        color: themeColors.text,
+                        borderColor: themeColors.text + '20',
+                        borderWidth: '1px'
+                      }}
+                      placeholder="Enter your last name"
                       required
                     />
                   </div>
@@ -273,7 +329,7 @@ export default function FlightBookingPage() {
 
                   <div>
                     <label 
-                      htmlFor="phone" 
+                      htmlFor="phoneNumber" 
                       className="block text-sm font-medium mb-1"
                       style={{ color: themeColors.text }}
                     >
@@ -281,9 +337,9 @@ export default function FlightBookingPage() {
                     </label>
                     <input
                       type="tel"
-                      id="phone"
-                      name="phone"
-                      value={flightDetails.phone}
+                      id="phoneNumber"
+                      name="phoneNumber"
+                      value={flightDetails.phoneNumber}
                       onChange={handleInputChange}
                       className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2"
                       style={{
