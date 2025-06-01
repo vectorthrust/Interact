@@ -18,7 +18,7 @@ def foodTemplate(address, restaurantName, item):
         7. In the Address details box enter {address} and then press enter
         8. Click on the Search in Wolt... search bar
         9. Enter {restaurantName} and then search (press enter)
-        10. From the available options, identify the option in the list that has the text {restaurantName} then click it
+        10. DO NOT SCROLL YET, from the available options, identify the option in the list that has the text {restaurantName} then click it
         11. Scroll through this page until you find the {item} and then click on it
         12. Click Add to order
         13. Click View Order
