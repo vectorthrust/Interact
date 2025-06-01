@@ -130,7 +130,7 @@ export default function AgentPage() {
       if (data.status === "done") {
         const doneLog: LogUpdate = {
           id: `log-${Date.now()}`,
-          message: "Agent task completed successfully! Calling escrow contract...",
+          message: `Agent task completed successfully heres your order link ${data.result}! Calling escrow contract...`,
           timestamp: new Date(),
         };
         setLogs((prev) => [...prev, doneLog]);

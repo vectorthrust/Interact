@@ -11,11 +11,12 @@ def foodTemplate(address, restaurantName, item):
         8. Click on the Search in Wolt... search bar
         9. Enter {restaurantName} and then search (press enter)
         10. DO NOT SCROLL YET, from the available options, identify the option in the list that has the text {restaurantName} then click it
-        11. Scroll through this page until you find the {item} and then click on it
-        12. Click Add to order
-        13. Click View Order
+        11. Click on the Search in Mcdonalds search bar and enter {item}
+        12. Scoll down and Click on the button that matches {item} 
+        12. Click "Add to order"
+        13. Now click the "View Order" on the top right of the page
         14. Click Go to checkout
-        15. Now find and click the Click to order button
+        15. Now find and click the "Click to order" button
         16. Click Share tracking
         17. Save the entire track.wolt.com url visible on screen and then navigate to it
         '''

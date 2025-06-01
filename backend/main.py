@@ -1,6 +1,7 @@
 from fastapi import FastAPI, WebSocket
+from fastapi.middleware.cors import CORSMiddleware
 from langchain_openai import ChatOpenAI
-from browser_use import Agent, ActionResult, Controller
+from browser_use import Agent
 from dotenv import load_dotenv
 import uvicorn
 import asyncio
