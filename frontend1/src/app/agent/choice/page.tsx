@@ -25,7 +25,10 @@ export default function ServicePage() {
       setShowComingSoon(true);
       setTimeout(() => setShowComingSoon(false), 2000);
     } else {
-      localStorage.setItem('selectedService', service);
+      // Convert service name to URL-safe slug
+      const serviceSlug = service.toLowerCase().replace(/\s+/g, '-');
+      localStorage.setItem('selectedService', serviceSlug);
+      localStorage.setItem('selectedServiceTitle', service); // Store original title for display
       router.push('/agent/deposit');
     }
   };

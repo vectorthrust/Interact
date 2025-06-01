@@ -218,7 +218,7 @@ export default function AgentPage() {
       
       // Get the latest task ID (assuming it's the one we just created)
       const nextTaskId = await escrow.nextTaskId();
-      const taskId = nextTaskId - 1n; // Latest task ID
+      const taskId = nextTaskId - BigInt(1); // Latest task ID
 
       console.log(`🤖 Agent completing task ${taskId} on ${theme}...`);
 

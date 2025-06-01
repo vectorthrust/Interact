@@ -28,7 +28,8 @@ const ERC20_ABI = [
 
 // TaskEscrow ABI
 const TASK_ESCROW_ABI = [
-  "function createTask(string description, uint256 depositAmount) external payable returns (uint256)"
+  "function createTask(string description, address[] allowedAgents) external payable returns (uint256)",
+  "function getTask(uint256 taskId) external view returns (tuple(address user, address agent, uint256 amount, string description, bool completed, bool verified, bool paid, uint256 createdAt, uint256 completedAt, address[] allowedAgents))"
 ];
 
 export default function OnRampCard() {
@@ -38,6 +39,7 @@ export default function OnRampCard() {
   const [isLoading, setIsLoading] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string>('');
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isNetworkCorrect, setIsNetworkCorrect] = useState(false);
 
   const getTokenInfo = () => {
     switch (theme) {
@@ -46,41 +48,119 @@ export default function OnRampCard() {
           name: 'FLR',
           minAmount: '0.1',
           network: 'Flare Network',
-          chainId: '0xE',
+          chainId: '0xE', // Chain ID 14
           rpcUrl: 'https://flare-api.flare.network/ext/C/rpc',
-          escrowContract: '0x698AeD7013796240EE7632Bde5f67A7f2A2aA6A5'
+          escrowContract: '0x698AeD7013796240EE7632Bde5f67A7f2A2aA6A5',
+          isNative: true // FLR is native token on Flare
         };
       case 'hedera':
         return {
           name: 'HBAR',
           minAmount: '1',
           network: 'Hedera Testnet',
-          chainId: '0x128',
+          chainId: '0x128', // Chain ID 296
           rpcUrl: 'https://testnet.hashio.io/api',
-          escrowContract: '0x0Cba9f72f0b55b59E9F92432626E9D9A9Bc419e8'
+          escrowContract: '0x0Cba9f72f0b55b59E9F92432626E9D9A9Bc419e8',
+          isNative: true
         };
       case 'flow':
         return {
           name: 'FLOW',
           minAmount: '0.1',
           network: 'Flow Mainnet',
-          chainId: '0x2EB',
+          chainId: '0x2EB', // Chain ID 747
           rpcUrl: 'https://mainnet.evm.nodes.onflow.org',
-          escrowContract: '0x63Ba4C892bD1910b2DD4F13F9B0a86f6E650A788'
+          escrowContract: '0x63Ba4C892bD1910b2DD4F13F9B0a86f6E650A788',
+          isNative: true
         };
       default:
         return {
           name: 'ETH',
           minAmount: '0.001',
           network: 'Base',
-          chainId: '0x2105',
+          chainId: '0x2105', // Chain ID 8453
           rpcUrl: 'https://mainnet.base.org',
-          escrowContract: ''
+          escrowContract: '',
+          isNative: true
         };
     }
   };
 
   const tokenInfo = getTokenInfo();
+
+  const checkNetwork = async () => {
+    if (!window.ethereum) return false;
+    
+    try {
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      console.log('Current chainId:', chainId, 'Expected:', tokenInfo.chainId);
+      const isCorrect = chainId.toLowerCase() === tokenInfo.chainId.toLowerCase();
+      setIsNetworkCorrect(isCorrect);
+      return isCorrect;
+    } catch (error) {
+      console.error('Failed to check network:', error);
+      return false;
+    }
+  };
+
+  const switchNetwork = async () => {
+    if (!window.ethereum) {
+      return false;
+    }
+
+    try {
+      setIsLoading(true);
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: tokenInfo.chainId }],
+      });
+      
+      // Wait a bit for the network to switch
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      const switched = await checkNetwork();
+      if (switched) {
+        console.log('Successfully switched to', tokenInfo.network);
+      }
+      return switched;
+    } catch (switchError: any) {
+      // If network doesn't exist, try to add it
+      if (switchError.code === 4902) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: tokenInfo.chainId,
+              chainName: tokenInfo.network,
+              rpcUrls: [tokenInfo.rpcUrl],
+              nativeCurrency: {
+                name: tokenInfo.name,
+                symbol: tokenInfo.name,
+                decimals: 18,
+              },
+            }],
+          });
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          const added = await checkNetwork();
+          if (added) {
+            console.log('Successfully added and switched to', tokenInfo.network);
+          }
+          return added;
+        } catch (addError) {
+          console.error('Failed to add network:', addError);
+          return false;
+        }
+      } else if (switchError.code === 4001) {
+        // User rejected
+        console.log('User rejected network switch');
+        return false;
+      } else {
+        console.error('Failed to switch network:', switchError);
+        return false;
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const connectWallet = async () => {
     if (!window.ethereum) {
@@ -96,6 +176,13 @@ export default function OnRampCard() {
       
       if (accounts.length > 0) {
         setWalletAddress(accounts[0]);
+        
+        // Check network and auto-switch if needed
+        const isCorrect = await checkNetwork();
+        if (!isCorrect) {
+          console.log('Auto-switching to', tokenInfo.network);
+          await switchNetwork();
+        }
       }
     } catch (error) {
       console.error('Wallet connection failed:', error);
@@ -111,6 +198,21 @@ export default function OnRampCard() {
       return;
     }
 
+    if (parseFloat(amount) < parseFloat(tokenInfo.minAmount)) {
+      alert(`Minimum amount is ${tokenInfo.minAmount} ${tokenInfo.name}`);
+      return;
+    }
+
+    // Auto-switch network if needed
+    if (!isNetworkCorrect) {
+      console.log('Auto-switching network before deposit...');
+      const switched = await switchNetwork();
+      if (!switched) {
+        alert(`Failed to switch to ${tokenInfo.network}. Please switch manually.`);
+        return;
+      }
+    }
+
     const proceed = confirm(`Deposit ${amount} ${tokenInfo.name} to escrow?`);
     if (!proceed) return;
 
@@ -122,12 +224,17 @@ export default function OnRampCard() {
     } catch (error: any) {
       console.error('Deposit failed:', error);
       let message = 'Transaction failed. ';
+      
       if (error.message.includes('insufficient funds')) {
         message += 'Insufficient balance or gas.';
       } else if (error.message.includes('user rejected')) {
         message += 'Transaction was cancelled.';
+      } else if (error.message.includes('execution reverted')) {
+        message += 'Contract execution failed. The escrow contract may not exist or have issues.';
+      } else if (error.code === -32603) {
+        message += 'RPC error. Please try again.';
       } else {
-        message += error.message;
+        message += error.message || 'Unknown error occurred.';
       }
       alert(message);
     } finally {
@@ -139,51 +246,95 @@ export default function OnRampCard() {
     const provider = new ethers.BrowserProvider(window.ethereum as any);
     const signer = await provider.getSigner();
     
-    if (theme === 'flare') {
-      // For Flare, approve FLR token first
-      const flrContract = new ethers.Contract(
-        '0x1D80c49BbBCd1C0911346656B529DF9E5c2F783d',
-        ERC20_ABI,
-        signer
-      );
-      
-      const amountWei = ethers.parseEther(depositAmount.toString());
-      
-      // Approve
-      const approveTx = await flrContract.approve(tokenInfo.escrowContract, amountWei);
-      await approveTx.wait();
-      
-      // Create task
-      const escrow = new ethers.Contract(tokenInfo.escrowContract, TASK_ESCROW_ABI, signer);
-      const tx = await escrow.createTask(
-        `Task for ${depositAmount} FLR`,
-        amountWei,
-        { gasLimit: 500000 }
-      );
-      await tx.wait();
-    } else {
-      // For HBAR/FLOW (native tokens)
-      const escrow = new ethers.Contract(tokenInfo.escrowContract, TASK_ESCROW_ABI, signer);
-      const amountWei = ethers.parseEther(depositAmount.toString());
-      
-      const tx = await escrow.createTask(
-        `Task for ${depositAmount} ${tokenInfo.name}`,
-        amountWei,
-        { 
-          value: amountWei,
-          gasLimit: theme === 'hedera' ? 200000 : 300000,
-          ...(theme === 'hedera' && { gasPrice: ethers.parseUnits("540", "gwei") })
-        }
-      );
-      await tx.wait();
+    // Check user balance first
+    const balance = await provider.getBalance(walletAddress);
+    const amountWei = ethers.parseEther(depositAmount.toString());
+    const estimatedGas = ethers.parseEther("0.001"); // Rough gas estimation
+    
+    if (balance < amountWei + estimatedGas) {
+      throw new Error(`Insufficient balance. You need at least ${ethers.formatEther(amountWei + estimatedGas)} ${tokenInfo.name}`);
     }
+    
+    // Create escrow contract instance
+    const escrow = new ethers.Contract(tokenInfo.escrowContract, TASK_ESCROW_ABI, signer);
+    
+    // Estimate gas for the transaction
+    let gasLimit;
+    try {
+      gasLimit = await escrow.createTask.estimateGas(
+        `Task for ${depositAmount} ${tokenInfo.name}`,
+        [], // allowedAgents - empty array means anyone can complete the task
+        { value: amountWei }
+      );
+      // Add 20% buffer to gas limit
+      gasLimit = gasLimit * BigInt(120) / BigInt(100);
+    } catch (error) {
+      console.warn('Gas estimation failed, using default:', error);
+      // Fallback gas limits per network
+      switch (theme) {
+        case 'flare':
+          gasLimit = BigInt(300000);
+          break;
+        case 'hedera':
+          gasLimit = BigInt(200000);
+          break;
+        case 'flow':
+          gasLimit = BigInt(300000);
+          break;
+        default:
+          gasLimit = BigInt(250000);
+      }
+    }
+
+    // Get current gas price
+    const feeData = await provider.getFeeData();
+    const gasPrice = feeData.gasPrice;
+    
+    const txOptions: any = {
+      value: amountWei,
+      gasLimit: gasLimit,
+    };
+
+    // Set custom gas price for Hedera
+    if (theme === 'hedera' && gasPrice) {
+      txOptions.gasPrice = gasPrice * BigInt(2); // Double the gas price for Hedera
+    }
+
+    console.log('Transaction options:', {
+      value: ethers.formatEther(amountWei),
+      gasLimit: gasLimit.toString(),
+      gasPrice: gasPrice ? ethers.formatUnits(gasPrice, 'gwei') + ' gwei' : 'auto'
+    });
+
+    // Execute transaction
+    const tx = await escrow.createTask(
+      `Task for ${depositAmount} ${tokenInfo.name}`,
+      [], // allowedAgents - empty array means anyone can complete the task
+      txOptions
+    );
+    
+    console.log('Transaction sent:', tx.hash);
+    const receipt = await tx.wait();
+    console.log('Transaction confirmed:', receipt);
+    
+    return receipt;
   };
 
   const handleBack = () => router.push('/agent/choice');
   const handleNext = () => {
     const selectedService = localStorage.getItem('selectedService');
-    if (selectedService) router.push(`/services/${selectedService}`);
+    if (selectedService) {
+      // Use the URL-safe slug directly (no encoding needed)
+      router.push(`/services/${selectedService}`);
+    }
   };
+
+  // Check network on wallet connection
+  useEffect(() => {
+    if (walletAddress) {
+      checkNetwork();
+    }
+  }, [walletAddress, theme]);
 
   return (
     <div className="h-screen w-screen flex items-center justify-center" style={{ backgroundColor: themeColors.background }}>
@@ -231,6 +382,17 @@ export default function OnRampCard() {
                     Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
                     <br />
                     Network: {tokenInfo.network}
+                    {!isNetworkCorrect && !isLoading && (
+                      <div className="text-yellow-600 mt-1 flex items-center gap-1">
+                        <span className="animate-spin">⚡</span>
+                        Switching to {tokenInfo.network}...
+                      </div>
+                    )}
+                    {isNetworkCorrect && (
+                      <div className="text-green-600 mt-1 flex items-center gap-1">
+                        ✅ Connected to {tokenInfo.network}
+                      </div>
+                    )}
                   </div>
 
                   <div className="w-full">
@@ -257,10 +419,13 @@ export default function OnRampCard() {
                     onClick={handleDeposit}
                     disabled={isLoading}
                     className="flex items-center justify-center gap-2"
-                    style={{ background: themeColors.gradient, color: themeColors.background }}
+                    style={{ 
+                      background: themeColors.gradient, 
+                      color: themeColors.background 
+                    }}
                   >
                     <SiMetabase className="w-5 h-5" />
-                    {isLoading ? 'Creating Task...' : 'Create Escrow Task'}
+                    {isLoading ? 'Processing...' : 'Create Escrow Task'}
                   </Button>
 
                   <div className="text-sm text-center mt-2" style={{ color: themeColors.text + '99' }}>
