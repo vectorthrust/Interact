@@ -45,10 +45,15 @@ export default function FoodDeliveryPage() {
     setTimeout(() => {
       const aiMessage: Message = {
         type: 'ai',
-        content: 'Loading...'
+        content: 'Your order has been placed successfully! Redirecting to payment...'
       };
       setMessages(prev => [...prev, aiMessage]);
       setIsLoading(false);
+      
+      // Redirect to order complete page after a short delay
+      setTimeout(() => {
+        router.push('/services/order-complete');
+      }, 1500);
     }, 2000);
   };
 
@@ -125,7 +130,7 @@ export default function FoodDeliveryPage() {
                 className={`max-w-[80%] rounded-lg p-3 ${
                   message.type === 'user'
                     ? 'text-white'
-                    : 'text-gray-200'
+                    : themeColors.background === '#F8F8F8' ? 'text-gray-800' : 'text-gray-100'
                 }`}
                 style={{
                   background: message.type === 'user' 
@@ -133,14 +138,7 @@ export default function FoodDeliveryPage() {
                     : themeColors.background === '#F8F8F8' ? '#F0F0F0' : '#2A2A2A'
                 }}
               >
-                {message.content === 'Loading...' ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
-                    Loading...
-                  </div>
-                ) : (
-                  message.content
-                )}
+                {message.content}
               </div>
             </div>
           ))}

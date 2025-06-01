@@ -21,12 +21,12 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const themeConfig = {
   flow: {
-    primary: '#00EE8A',
-    secondary: '#00EE8A',
+    primary: '#00CC7A',
+    secondary: '#00AA6A',
     background: '#F8F8F8',
     text: '#000000',
-    accent: '#00EE8A',
-    gradient: 'linear-gradient(135deg, #00EE8A 0%, #00CC7A 100%)'
+    accent: '#00CC7A',
+    gradient: 'linear-gradient(135deg, #00CC7A 0%, #00AA6A 100%)'
   },
   flare: {
     primary: '#E51556',

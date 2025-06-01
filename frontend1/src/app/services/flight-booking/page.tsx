@@ -125,7 +125,7 @@ export default function FlightBookingPage() {
                 className={`max-w-[80%] rounded-lg p-3 ${
                   message.type === 'user'
                     ? 'text-white'
-                    : 'text-gray-200'
+                    : themeColors.background === '#F8F8F8' ? 'text-gray-800' : 'text-gray-100'
                 }`}
                 style={{
                   background: message.type === 'user' 
