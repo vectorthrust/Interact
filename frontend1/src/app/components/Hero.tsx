@@ -2,61 +2,63 @@
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/app/providers";
+import { MouseMoveEffect } from "@/components/mouse-move-effect";
+import Footer from "@/app/components/Footer";
 
 export default function Hero() {
     const router = useRouter();
-    const { themeColors } = useTheme();
+    const { themeColors, theme } = useTheme();
   
     const handleRedirect = () => {
       router.push('/agent/meta');
     };
 
+    const handleGetStarted = () => {
+      router.push('/agent/meta');
+    };
+
   return (
-    <div 
-      className="h-screen w-screen flex items-center justify-center transition-colors duration-300"
-      style={{ backgroundColor: themeColors.background }}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div className="flex items-center justify-center mb-8">
-          <h1 
-            className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight"
-            style={{ color: themeColors.text }}
-          >
-            Interact
-          </h1>
-          <img
-            src="https://i.imgur.com/ZjRjDD6.png"
-            alt="icon"
-            className="w-34 h-34 ml-5 transform hover:scale-110 transition-transform duration-300"
-          />
+    <div className="min-h-screen flex flex-col items-center justify-center relative" style={{ backgroundColor: themeColors.background }}>
+      {/* Mouse Move Effect */}
+      <MouseMoveEffect />
+
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="max-w-4xl mx-auto text-center space-y-8">
+          {/* Logo and Title */}
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <img
+              src="https://i.imgur.com/ZjRjDD6.png"
+              alt="Interact Logo"
+              className="w-30 h-30 animate-float"
+            />
+            <h1 className="text-6xl sm:text-7xl lg:text-8xl font-bold tracking-tight" style={{ color: themeColors.text }}>
+              <b>Inter</b>act
+            </h1>
+          </div>
+
+          {/* Description */}
+          <p className="text-xl sm:text-2xl max-w-2xl mx-auto" style={{ color: themeColors.text + 'CC' }}>
+            Your AI-powered service companion for seamless everyday tasks
+          </p>
+
+          {/* CTA Button */}
+          <div className="mt-12">
+            <button
+              onClick={handleGetStarted}
+              className="px-8 py-4 text-lg rounded-xl transition-all hover:scale-[1.02]"
+              style={{
+                background: `linear-gradient(135deg, ${themeColors.primary} 0%, ${themeColors.secondary} 100%)`,
+                color: theme === 'hedera' ? '#000000' : 'white',
+              }}
+            >
+              Get Started
+            </button>
+          </div>
         </div>
-        <span 
-          className="text-2xl sm:text-3xl lg:text-4xl block mb-10"
-          style={{ color: themeColors.primary }}
-        >
-          Effortless real-world utility
-        </span>
-        <p 
-          className="mx-auto text-lg sm:text-xl mb-10"
-          style={{ color: themeColors.text + 'CC' }}
-        >
-          From crypto to real-world actions and transactions in seconds, all powered by AI.
-        </p>
-        <Button 
-          onClick={handleRedirect} 
-          className="relative group px-8 py-6 text-lg hover:opacity-90"
-          style={{ 
-            background: themeColors.gradient,
-            color: themeColors.background
-          }}
-        >
-          <span className="relative z-10">Get started</span>
-          <div 
-            className="absolute inset-0 blur-lg group-hover:blur-xl transition-all duration-300 opacity-0 group-hover:opacity-100"
-            style={{ background: themeColors.gradient }}
-          />
-        </Button>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

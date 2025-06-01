@@ -9,8 +9,8 @@ export default function Footer() {
     switch (theme) {
       case 'flare':
         return 'Flare';
-      case 'rootstock':
-        return 'Rootstock';
+      case 'hedera':
+        return 'Hedera';
       case 'flow':
         return 'Flow';
       default:

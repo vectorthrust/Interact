@@ -2,180 +2,93 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
-import { FaRobot, FaHistory } from 'react-icons/fa';
+import { FaUtensils } from 'react-icons/fa';
 import { ChevronLeft } from 'lucide-react';
 import { useTheme } from "@/app/providers";
 import Footer from '@/app/components/Footer';
 
-interface Message {
-  type: 'user' | 'ai';
-  content: string;
+interface OrderDetails {
+  address: string;
+  restaurantName: string;
+  item: string;
+}
+
+interface StoredOrder extends OrderDetails {
+  timestamp: string;
+  status: string;
 }
 
 export default function FoodDeliveryPage() {
   const router = useRouter();
-  const { themeColors } = useTheme();
-  const [selectedOption, setSelectedOption] = useState<'past' | 'ai' | null>(null);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      type: 'ai',
-      content: "I'm your AI food assistant! I can help you discover delicious meals based on your preferences, dietary restrictions, and cravings. Just tell me what you're in the mood for, and I'll suggest the perfect options for you. What would you like to explore today?"
-    }
-  ]);
-  const [input, setInput] = useState('');
+  const { themeColors, theme } = useTheme();
+  const [orderDetails, setOrderDetails] = useState<OrderDetails>({
+    address: '',
+    restaurantName: '',
+    item: ''
+  });
   const [isLoading, setIsLoading] = useState(false);
+
+  // Function to get stored order
+  const getStoredOrder = (): StoredOrder | null => {
+    if (typeof window === 'undefined') return null;
+    const storedOrder = localStorage.getItem('currentOrder');
+    return storedOrder ? JSON.parse(storedOrder) : null;
+  };
+
+  // Example of how to use the stored order
+  const handleViewOrder = () => {
+    const order = getStoredOrder();
+    if (order) {
+      console.log('Stored Order:', order);
+      // You can access individual fields like:
+      console.log('Address:', order.address);
+      console.log('Restaurant:', order.restaurantName);
+      console.log('Item:', order.item);
+      console.log('Order Time:', order.timestamp);
+      console.log('Status:', order.status);
+    } else {
+      console.log('No order found');
+    }
+  };
 
   const handleBack = () => {
     router.push('/agent/choice');
   };
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!orderDetails.address || !orderDetails.restaurantName || !orderDetails.item) {
+      alert('Please fill in all fields');
+      return;
+    }
 
-    // Add user message
-    const userMessage: Message = {
-      type: 'user',
-      content: input
-    };
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
     setIsLoading(true);
-
-    // Simulate AI response with loading
-    setTimeout(() => {
-      const aiMessage: Message = {
-        type: 'ai',
-        content: 'Your order has been placed successfully! Redirecting to payment...'
+    try {
+      // Store order details in localStorage
+      const orderData: StoredOrder = {
+        ...orderDetails,
+        timestamp: new Date().toISOString(),
+        status: 'pending'
       };
-      setMessages(prev => [...prev, aiMessage]);
+      localStorage.setItem('currentOrder', JSON.stringify(orderData));
+
+      // Redirect to agent page
+      router.push('/agent/agent');
+    } catch (error) {
+      console.error('Error processing order:', error);
+      alert('Failed to process order. Please try again.');
+    } finally {
       setIsLoading(false);
-      
-      // Redirect to order complete page after a short delay
-      setTimeout(() => {
-        router.push('/services/order-complete');
-      }, 1500);
-    }, 2000);
+    }
   };
 
-  const renderOptions = () => (
-    <Card className="w-full max-w-2xl mx-auto" style={{ backgroundColor: themeColors.background === '#F8F8F8' ? '#FFFFFF' : '#1A1A1A' }}>
-      <CardHeader>
-        <CardTitle className="text-2xl" style={{ color: themeColors.text }}>Food Delivery</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 gap-4">
-          <Card 
-            className="cursor-pointer transform transition-all duration-300 hover:scale-105"
-            onClick={() => setSelectedOption('past')}
-            style={{ backgroundColor: themeColors.background === '#F8F8F8' ? '#FFFFFF' : '#1A1A1A' }}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div 
-                  className="p-3 rounded-full"
-                  style={{ background: `linear-gradient(135deg, ${themeColors.primary} 0%, ${themeColors.secondary} 100%)` }}
-                >
-                  <FaHistory className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold" style={{ color: themeColors.text }}>Past Orders</h3>
-                  <p className="text-sm" style={{ color: themeColors.text + 'CC' }}>View and reorder your favorite meals</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="cursor-pointer transform transition-all duration-300 hover:scale-105"
-            onClick={() => setSelectedOption('ai')}
-            style={{ backgroundColor: themeColors.background === '#F8F8F8' ? '#FFFFFF' : '#1A1A1A' }}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div 
-                  className="p-3 rounded-full"
-                  style={{ background: `linear-gradient(135deg, ${themeColors.primary} 0%, ${themeColors.secondary} 100%)` }}
-                >
-                  <FaRobot className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold" style={{ color: themeColors.text }}>AI Assistant</h3>
-                  <p className="text-sm" style={{ color: themeColors.text + 'CC' }}>Let AI help you choose the perfect meal</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  const renderChat = () => (
-    <Card className="w-full max-w-2xl mx-auto" style={{ backgroundColor: themeColors.background === '#F8F8F8' ? '#FFFFFF' : '#1A1A1A' }}>
-      <CardHeader className="border-b" style={{ borderColor: themeColors.text + '20' }}>
-        <div className="flex items-center gap-2">
-          <FaRobot className="w-5 h-5" style={{ color: themeColors.primary }} />
-          <CardTitle className="text-xl" style={{ color: themeColors.text }}>Chat with AI</CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent className="p-4">
-        {/* Messages */}
-        <div className="h-[400px] overflow-y-auto space-y-4 mb-4">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[80%] rounded-lg p-3 ${
-                  message.type === 'user'
-                    ? 'text-white'
-                    : themeColors.background === '#F8F8F8' ? 'text-gray-800' : 'text-gray-100'
-                }`}
-                style={{
-                  background: message.type === 'user' 
-                    ? `linear-gradient(135deg, ${themeColors.primary} 0%, ${themeColors.secondary} 100%)`
-                    : themeColors.background === '#F8F8F8' ? '#F0F0F0' : '#2A2A2A'
-                }}
-              >
-                {message.content}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Input Area */}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Type your message..."
-            className="flex-1 px-4 py-2 rounded-full focus:outline-none focus:ring-2"
-            style={{
-              backgroundColor: themeColors.background === '#F8F8F8' ? '#F0F0F0' : '#2A2A2A',
-              color: themeColors.text,
-              borderColor: themeColors.text + '20',
-              borderWidth: '1px'
-            }}
-            disabled={isLoading}
-          />
-          <button
-            onClick={handleSend}
-            className="px-4 py-2 text-white rounded-full transition-colors"
-            style={{ 
-              background: `linear-gradient(135deg, ${themeColors.primary} 0%, ${themeColors.secondary} 100%)`,
-              opacity: isLoading ? 0.7 : 1
-            }}
-            disabled={isLoading}
-          >
-            Send
-          </button>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setOrderDetails(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: themeColors.background }}>
@@ -206,7 +119,118 @@ export default function FoodDeliveryPage() {
 
         {/* Content */}
         <div className="max-w-2xl mx-auto">
-          {selectedOption === null ? renderOptions() : renderChat()}
+          <Card className="w-full" style={{ backgroundColor: themeColors.background === '#F8F8F8' ? '#FFFFFF' : '#1A1A1A' }}>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <div 
+                  className="p-2 rounded-full"
+                  style={{ 
+                    background: theme === 'hedera' 
+                      ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%)'
+                      : `linear-gradient(135deg, ${themeColors.primary} 0%, ${themeColors.secondary} 100%)`
+                  }}
+                >
+                  <FaUtensils className="w-5 h-5" style={{ color: theme === 'hedera' ? '#FFFFFF' : '#FFFFFF' }} />
+                </div>
+                <CardTitle className="text-2xl" style={{ color: themeColors.text }}>Food Delivery</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-4">
+                  <div>
+                    <label 
+                      htmlFor="address" 
+                      className="block text-sm font-medium mb-1"
+                      style={{ color: themeColors.text }}
+                    >
+                      Delivery Address
+                    </label>
+                    <input
+                      type="text"
+                      id="address"
+                      name="address"
+                      value={orderDetails.address}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2"
+                      style={{
+                        backgroundColor: themeColors.background === '#F8F8F8' ? '#F0F0F0' : '#2A2A2A',
+                        color: themeColors.text,
+                        borderColor: themeColors.text + '20',
+                        borderWidth: '1px'
+                      }}
+                      placeholder="Enter your delivery address"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label 
+                      htmlFor="restaurantName" 
+                      className="block text-sm font-medium mb-1"
+                      style={{ color: themeColors.text }}
+                    >
+                      Restaurant Name
+                    </label>
+                    <input
+                      type="text"
+                      id="restaurantName"
+                      name="restaurantName"
+                      value={orderDetails.restaurantName}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2"
+                      style={{
+                        backgroundColor: themeColors.background === '#F8F8F8' ? '#F0F0F0' : '#2A2A2A',
+                        color: themeColors.text,
+                        borderColor: themeColors.text + '20',
+                        borderWidth: '1px'
+                      }}
+                      placeholder="Enter restaurant name"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label 
+                      htmlFor="item" 
+                      className="block text-sm font-medium mb-1"
+                      style={{ color: themeColors.text }}
+                    >
+                      Item to Order
+                    </label>
+                    <input
+                      type="text"
+                      id="item"
+                      name="item"
+                      value={orderDetails.item}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2"
+                      style={{
+                        backgroundColor: themeColors.background === '#F8F8F8' ? '#F0F0F0' : '#2A2A2A',
+                        color: themeColors.text,
+                        borderColor: themeColors.text + '20',
+                        borderWidth: '1px'
+                      }}
+                      placeholder="Enter item name"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-3 rounded-lg transition-all hover:scale-[1.02] disabled:opacity-70"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${themeColors.primary} 0%, ${themeColors.secondary} 100%)`,
+                    color: theme === 'hedera' ? '#000000' : 'white'
+                  }}
+                >
+                  {isLoading ? 'Processing...' : 'Send to Agent'}
+                </button>
+              </form>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Footer */}

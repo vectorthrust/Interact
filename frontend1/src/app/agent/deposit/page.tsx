@@ -18,6 +18,13 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
+// ERC20 Token ABI - only the functions we need
+const ERC20_ABI = [
+  "function balanceOf(address owner) view returns (uint256)",
+  "function decimals() view returns (uint8)",
+  "function symbol() view returns (string)"
+];
+
 export default function OnRampCard() {
   const router = useRouter();
   const { themeColors, theme } = useTheme();
@@ -26,6 +33,7 @@ export default function OnRampCard() {
   const [walletBalance, setWalletBalance] = useState<string>('0');
   const [walletAddress, setWalletAddress] = useState<string>('');
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isNetworkChanging, setIsNetworkChanging] = useState(false);
 
   const getTokenInfo = () => {
     switch (theme) {
@@ -34,33 +42,153 @@ export default function OnRampCard() {
           name: 'FLR',
           minAmount: '0.1',
           network: 'Flare Network',
-          poweredBy: 'Flare'
+          poweredBy: 'Flare',
+          chainId: '0xE', // 14 in hex
+          rpcUrl: 'https://flare-api.flare.network/ext/C/rpc',
+          explorer: 'https://flare-explorer.flare.network',
+          tokenAddress: '0x1D80c49BbBCd1C0911346656B529DF9E5c2F783d', // FLR token contract
+          isNative: false
         };
-      case 'rootstock':
+      case 'hedera':
         return {
-          name: 'RBTC',
+          name: 'HBAR',
           minAmount: '0.1',
-          network: 'Rootstock Network',
-          poweredBy: 'Rootstock'
+          network: 'Hedera Mainnet',
+          poweredBy: 'Hedera',
+          chainId: '0x128', // 296 in hex
+          rpcUrl: 'https://mainnet.hashio.io/api',
+          explorer: 'https://hashscan.io/mainnet',
+          tokenAddress: '0x0000000000000000000000000000000000000000', // HBAR is native
+          isNative: true
         };
       case 'flow':
         return {
           name: 'FLOW',
           minAmount: '0.1',
-          network: 'Flow Network',
-          poweredBy: 'Flow'
+          network: 'Flow Mainnet',
+          poweredBy: 'Flow',
+          chainId: '0x2EB', // 747 in hex
+          rpcUrl: 'https://mainnet.evm.nodes.onflow.org',
+          explorer: 'https://evm.flowscan.io',
+          tokenAddress: '0x0000000000000000000000000000000000000000', // FLOW is native
+          isNative: true
         };
       default:
         return {
           name: 'ETH',
-          minAmount: '0.1',
-          network: 'Base Network',
-          poweredBy: 'EthGlobal'
+          minAmount: '0.00001',
+          network: 'Base Mainnet',
+          poweredBy: 'EthGlobal',
+          chainId: '0x2105', // 8453 in hex
+          rpcUrl: 'https://mainnet.base.org',
+          explorer: 'https://basescan.org',
+          tokenAddress: '0x0000000000000000000000000000000000000000', // ETH is native
+          isNative: true
         };
     }
   };
 
   const tokenInfo = getTokenInfo();
+
+  const getTokenBalance = async (provider: ethers.BrowserProvider, address: string) => {
+    if (isNetworkChanging) {
+      console.log('Network is changing, skipping balance check');
+      return '0';
+    }
+
+    try {
+      if (typeof window === 'undefined' || !window.ethereum) {
+        throw new Error('MetaMask not installed');
+      }
+
+      // Check if we're on the correct network
+      const network = await provider.getNetwork();
+      console.log('Current network:', network.chainId.toString());
+      console.log('Expected network:', tokenInfo.chainId);
+
+      if (network.chainId !== BigInt(tokenInfo.chainId)) {
+        setIsNetworkChanging(true);
+        console.log('Wrong network, attempting to switch...');
+        try {
+          // Try to switch to the correct network
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: tokenInfo.chainId }],
+          });
+
+          // Wait for network switch to complete
+          await new Promise(resolve => setTimeout(resolve, 2000));
+
+          // Get new provider after network switch
+          const newProvider = new ethers.BrowserProvider(window.ethereum as any);
+          provider = newProvider;
+
+          // Verify we're on the correct network
+          const newNetwork = await provider.getNetwork();
+          if (newNetwork.chainId !== BigInt(tokenInfo.chainId)) {
+            throw new Error('Failed to switch to correct network');
+          }
+        } catch (switchError: any) {
+          console.error('Switch error:', switchError);
+          if (switchError.code === 4902) {
+            // Network not added to MetaMask
+            try {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: tokenInfo.chainId,
+                  chainName: tokenInfo.network,
+                  nativeCurrency: {
+                    name: tokenInfo.name,
+                    symbol: tokenInfo.name,
+                    decimals: 18
+                  },
+                  rpcUrls: [tokenInfo.rpcUrl],
+                  blockExplorerUrls: [tokenInfo.explorer]
+                }]
+              });
+
+              // Wait for network addition to complete
+              await new Promise(resolve => setTimeout(resolve, 2000));
+
+              // Get new provider after network addition
+              const newProvider = new ethers.BrowserProvider(window.ethereum as any);
+              provider = newProvider;
+
+              // Verify we're on the correct network
+              const newNetwork = await provider.getNetwork();
+              if (newNetwork.chainId !== BigInt(tokenInfo.chainId)) {
+                throw new Error('Failed to add and switch to correct network');
+              }
+            } catch (addError) {
+              console.error('Add network error:', addError);
+              throw new Error(`Failed to add ${tokenInfo.network} to MetaMask`);
+            }
+          } else {
+            throw new Error(`Failed to switch to ${tokenInfo.network}`);
+          }
+        } finally {
+          setIsNetworkChanging(false);
+        }
+      }
+
+      // Now that we're on the correct network, get the balance
+      if (tokenInfo.isNative) {
+        // For native tokens (ETH, HBAR, FLOW)
+        const balance = await provider.getBalance(address);
+        return ethers.formatEther(balance);
+      } else {
+        // For ERC20 tokens (FLR)
+        const tokenContract = new ethers.Contract(tokenInfo.tokenAddress, ERC20_ABI, provider);
+        const balance = await tokenContract.balanceOf(address);
+        const decimals = await tokenContract.decimals();
+        return ethers.formatUnits(balance, decimals);
+      }
+    } catch (error) {
+      console.error('Error getting token balance:', error);
+      return '0';
+    }
+  };
 
   const handleBack = () => {
     router.push('/agent/choice');
@@ -95,66 +223,62 @@ export default function OnRampCard() {
       const network = await provider.getNetwork();
       console.log('Current network:', network);
 
-      // Check if we're on Base network (chainId: 8453)
-      if (network.chainId !== BigInt(8453)) {
+      // Check if we're on the correct network
+      if (network.chainId !== BigInt(tokenInfo.chainId)) {
         try {
-          // Try to switch to Base network
+          // Try to switch to the correct network
           await window.ethereum.request({
             method: 'wallet_switchEthereumChain',
-            params: [{ chainId: '0x2105' }], // 8453 in hex
+            params: [{ chainId: tokenInfo.chainId }],
           });
         } catch (switchError: any) {
-          // If Base network is not added to MetaMask, add it
+          // If network is not added to MetaMask, add it
           if (switchError.code === 4902) {
             try {
               await window.ethereum.request({
                 method: 'wallet_addEthereumChain',
                 params: [{
-                  chainId: '0x2105',
-                  chainName: 'Base',
+                  chainId: tokenInfo.chainId,
+                  chainName: tokenInfo.network,
                   nativeCurrency: {
-                    name: 'ETH',
-                    symbol: 'ETH',
+                    name: tokenInfo.name,
+                    symbol: tokenInfo.name,
                     decimals: 18
                   },
-                  rpcUrls: ['https://mainnet.base.org'],
-                  blockExplorerUrls: ['https://basescan.org']
+                  rpcUrls: [tokenInfo.rpcUrl],
+                  blockExplorerUrls: [tokenInfo.explorer]
                 }]
               });
             } catch (addError) {
-              console.error('Error adding Base network:', addError);
-              alert('Please add Base network to MetaMask manually');
+              console.error(`Error adding ${tokenInfo.network}:`, addError);
+              alert(`Please add ${tokenInfo.network} to MetaMask manually`);
               return;
             }
           } else {
-            console.error('Error switching to Base network:', switchError);
-            alert('Please switch to Base network in MetaMask');
+            console.error(`Error switching to ${tokenInfo.network}:`, switchError);
+            alert(`Please switch to ${tokenInfo.network} in MetaMask`);
             return;
           }
         }
       }
 
-      const signer = await provider.getSigner();
       const address = accounts[0];
       
-      // Get balance with more detailed logging
-      const balance = await provider.getBalance(address);
-      const formattedBalance = ethers.formatEther(balance);
+      // Get token balance
+      const balance = await getTokenBalance(provider, address);
       
       console.log('Connected wallet:', address);
-      console.log('Raw balance:', balance.toString());
-      console.log('Formatted balance:', formattedBalance);
+      console.log('Token balance:', balance);
       
       setWalletAddress(address);
-      setWalletBalance(formattedBalance);
+      setWalletBalance(balance);
 
       // Set up balance refresh
       const refreshBalance = async () => {
         try {
-          const newBalance = await provider.getBalance(address);
-          const newFormattedBalance = ethers.formatEther(newBalance);
-          console.log('Refreshed balance:', newFormattedBalance);
-          setWalletBalance(newFormattedBalance);
+          const newBalance = await getTokenBalance(provider, address);
+          console.log('Refreshed balance:', newBalance);
+          setWalletBalance(newBalance);
         } catch (error) {
           console.error('Error refreshing balance:', error);
         }
@@ -173,7 +297,7 @@ export default function OnRampCard() {
     }
   };
 
-  // Listen for account changes
+  // Update the useEffect for network changes
   useEffect(() => {
     if (typeof window === 'undefined' || !window.ethereum) return;
 
@@ -187,12 +311,20 @@ export default function OnRampCard() {
       }
     };
 
-    const handleChainChanged = (chainId: string) => {
+    const handleChainChanged = async (chainId: string) => {
       console.log('Chain changed to:', chainId);
-      // Add a small delay before reconnecting to ensure network is stable
-      setTimeout(() => {
-        connectWallet();
-      }, 1000);
+      setIsNetworkChanging(true);
+      
+      // Add a longer delay to ensure network is stable
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      try {
+        await connectWallet();
+      } catch (error) {
+        console.error('Error reconnecting after chain change:', error);
+      } finally {
+        setIsNetworkChanging(false);
+      }
     };
 
     window.ethereum.on('accountsChanged', handleAccountsChanged);
@@ -260,7 +392,7 @@ export default function OnRampCard() {
             <CardHeader className="z-10">
               <CardTitle className="text-2xl" style={{ color: themeColors.text }}>Deposit Funds</CardTitle>
               <CardDescription style={{ color: themeColors.text + 'CC' }}>
-                Deposit ETH to your wallet to get started with Interact.
+                Deposit {tokenInfo.name} to your wallet to get started with Interact.
               </CardDescription>
             </CardHeader>
 
@@ -283,14 +415,14 @@ export default function OnRampCard() {
                   <div className="text-sm mb-2" style={{ color: themeColors.text + 'CC' }}>
                     Connected Wallet: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
                     <br />
-                    Balance: {walletBalance} ETH
+                    Balance: {walletBalance} {tokenInfo.name}
                     <br />
-                    <span className="text-xs" style={{ color: themeColors.text + '99' }}>on Base Network</span>
+                    <span className="text-xs" style={{ color: themeColors.text + '99' }}>on {tokenInfo.network}</span>
                   </div>
 
                   <div className="w-full">
                     <label className="block text-sm font-medium mb-1" style={{ color: themeColors.text }}>
-                      Deposit Amount (ETH)
+                      Deposit Amount ({tokenInfo.name})
                     </label>
                     <input
                       type="number"
@@ -304,10 +436,10 @@ export default function OnRampCard() {
                       }}
                       placeholder="Enter amount"
                       step="0.01"
-                      min="0.01"
+                      min={tokenInfo.minAmount}
                     />
                     <div className="text-sm mt-1" style={{ color: themeColors.text + '99' }}>
-                      Minimum deposit: 0.00001 ETH
+                      Minimum deposit: {tokenInfo.minAmount} {tokenInfo.name}
                     </div>
                   </div>
 
@@ -325,7 +457,7 @@ export default function OnRampCard() {
                   </Button>
 
                   <div className="text-sm text-center mt-2" style={{ color: themeColors.text + '99' }}>
-                    Make sure you have enough ETH in your MetaMask wallet to cover the deposit amount plus gas fees.
+                    Make sure you have enough {tokenInfo.name} in your MetaMask wallet to cover the deposit amount plus gas fees.
                   </div>
                 </>
               )}

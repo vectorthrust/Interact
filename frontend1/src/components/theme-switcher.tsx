@@ -10,7 +10,7 @@ export function ThemeSwitcher() {
   const themes = [
     { id: 'flow', name: 'Flow', color: '#00EE8A' },
     { id: 'flare', name: 'Flare', color: '#E51556' },
-    { id: 'rootstock', name: 'Rootstock', color: '#FF9002' },
+    { id: 'hedera', name: 'Hedera', color: '#FFFFFF' },
     { id: 'ethglobal', name: 'ETHGlobal', color: '#ff008c' }
   ];
 

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, ReactNode } from 'react';
 
-export type Theme = 'flow' | 'flare' | 'rootstock' | 'ethglobal';
+export type Theme = 'flow' | 'flare' | 'hedera' | 'ethglobal';
 
 interface ThemeContextType {
   theme: Theme;
@@ -36,13 +36,13 @@ const themeConfig = {
     accent: '#E51556',
     gradient: 'linear-gradient(135deg, #E51556 0%, #CC134D 100%)'
   },
-  rootstock: {
-    primary: '#FF9002',
-    secondary: '#000000',
+  hedera: {
+    primary: '#FFFFFF',
+    secondary: '#FFFFFF',
     background: '#0A0A0A',
     text: '#FFFFFF',
-    accent: '#FF9002',
-    gradient: 'linear-gradient(135deg, #FF9002 0%, #E67E00 100%)'
+    accent: '#FFFFFF',
+    gradient: 'linear-gradient(135deg, #FFFFFF 0%, #CCCCCC 100%)'
   },
   ethglobal: {
     primary: '#ff008c',

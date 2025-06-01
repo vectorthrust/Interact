@@ -13,7 +13,7 @@ const ReactConfetti = dynamic(() => import("react-confetti"), {
 });
 
 export default function OrderComplete() {
-  const { themeColors } = useTheme();
+  const { themeColors, theme } = useTheme();
   const router = useRouter();
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [showConfetti, setShowConfetti] = useState(true);
@@ -84,7 +84,7 @@ export default function OrderComplete() {
                 className="w-full flex items-center justify-center gap-3 p-4 rounded-xl transition-all hover:scale-[1.02]"
                 style={{
                   background: `linear-gradient(135deg, ${themeColors.primary} 0%, ${themeColors.secondary} 100%)`,
-                  color: "white",
+                  color: theme === 'hedera' ? '#000000' : 'white',
                 }}
               >
                 <Wallet className="w-5 h-5" />
