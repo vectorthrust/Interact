@@ -66,7 +66,7 @@ export default function OnRampCard() {
       case 'flow':
         return {
           name: 'FLOW',
-          minAmount: '0.1',
+          minAmount: '0.01',
           network: 'Flow Mainnet',
           chainId: '0x2EB', // Chain ID 747
           rpcUrl: 'https://mainnet.evm.nodes.onflow.org',
@@ -203,7 +203,37 @@ export default function OnRampCard() {
       return;
     }
 
-    // Auto-switch network if needed
+    // For Hedera, skip wallet connection and network checks
+    if (theme === 'hedera') {
+      const proceed = confirm(`Deposit ${amount} ${tokenInfo.name} to escrow using Hedera private key?`);
+      if (!proceed) return;
+
+      setIsLoading(true);
+      try {
+        await createTask(parseFloat(amount));
+        alert(`Success! ${amount} ${tokenInfo.name} deposited to escrow.`);
+        handleNext();
+      } catch (error: any) {
+        console.error('Deposit failed:', error);
+        let message = 'Transaction failed. ';
+        
+        if (error.message.includes('insufficient funds')) {
+          message += 'Insufficient balance or gas.';
+        } else if (error.message.includes('execution reverted')) {
+          message += 'Contract execution failed. The escrow contract may not exist or have issues.';
+        } else if (error.code === -32603) {
+          message += 'RPC error. Please try again.';
+        } else {
+          message += error.message || 'Unknown error occurred.';
+        }
+        alert(message);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    // For non-Hedera networks: Auto-switch network if needed
     if (!isNetworkCorrect) {
       console.log('Auto-switching network before deposit...');
       const switched = await switchNetwork();
@@ -243,81 +273,124 @@ export default function OnRampCard() {
   };
 
   const createTask = async (depositAmount: number) => {
-    const provider = new ethers.BrowserProvider(window.ethereum as any);
-    const signer = await provider.getSigner();
-    
-    // Check user balance first
-    const balance = await provider.getBalance(walletAddress);
-    const amountWei = ethers.parseEther(depositAmount.toString());
-    const estimatedGas = ethers.parseEther("0.001"); // Rough gas estimation
-    
-    if (balance < amountWei + estimatedGas) {
-      throw new Error(`Insufficient balance. You need at least ${ethers.formatEther(amountWei + estimatedGas)} ${tokenInfo.name}`);
-    }
-    
-    // Create escrow contract instance
-    const escrow = new ethers.Contract(tokenInfo.escrowContract, TASK_ESCROW_ABI, signer);
-    
-    // Estimate gas for the transaction
-    let gasLimit;
-    try {
-      gasLimit = await escrow.createTask.estimateGas(
+    if (theme === 'hedera') {
+      // For Hedera: Use hardcoded private key instead of MetaMask
+      const HEDERA_PRIVATE_KEY = "e359cbe13b7a9f96a74e31c89a1010267c1b44f1a349197b762262e2ed12a56d";
+      const provider = new ethers.JsonRpcProvider("https://testnet.hashio.io/api");
+      const wallet = new ethers.Wallet(HEDERA_PRIVATE_KEY, provider);
+      
+      const escrow = new ethers.Contract(tokenInfo.escrowContract, TASK_ESCROW_ABI, wallet);
+      const amountWei = ethers.parseEther(depositAmount.toString());
+      
+      console.log('Creating task on Hedera with private key...');
+      const tx = await escrow.createTask(
         `Task for ${depositAmount} ${tokenInfo.name}`,
         [], // allowedAgents - empty array means anyone can complete the task
-        { value: amountWei }
+        { 
+          value: amountWei,
+          gasLimit: BigInt(200000),
+          gasPrice: ethers.parseUnits("540", "gwei")
+        }
       );
-      // Add 20% buffer to gas limit
-      gasLimit = gasLimit * BigInt(120) / BigInt(100);
-    } catch (error) {
-      console.warn('Gas estimation failed, using default:', error);
-      // Fallback gas limits per network
+      
+      console.log('Transaction sent:', tx.hash);
+      await tx.wait();
+      console.log('Task created successfully on Hedera');
+      return tx;
+    } else {
+      // For other networks: Use MetaMask as before
+      const provider = new ethers.BrowserProvider(window.ethereum as any);
+      const signer = await provider.getSigner();
+      
+      // Check user balance first
+      const balance = await provider.getBalance(walletAddress);
+      const amountWei = ethers.parseEther(depositAmount.toString());
+      
+      // More accurate gas estimation per network
+      let estimatedGasCost;
       switch (theme) {
-        case 'flare':
-          gasLimit = BigInt(300000);
-          break;
-        case 'hedera':
-          gasLimit = BigInt(200000);
-          break;
         case 'flow':
-          gasLimit = BigInt(300000);
+          estimatedGasCost = ethers.parseEther("0.015"); // Higher gas cost for Flow
+          break;
+        case 'flare':
+          estimatedGasCost = ethers.parseEther("0.005"); // Moderate for Flare
           break;
         default:
-          gasLimit = BigInt(250000);
+          estimatedGasCost = ethers.parseEther("0.001"); // Default
       }
+      
+      if (balance < amountWei + estimatedGasCost) {
+        const needed = ethers.formatEther(amountWei + estimatedGasCost);
+        const current = ethers.formatEther(balance);
+        throw new Error(`Insufficient balance. You have ${current} ${tokenInfo.name} but need at least ${needed} ${tokenInfo.name} (including gas fees)`);
+      }
+      
+      // Create escrow contract instance
+      const escrow = new ethers.Contract(tokenInfo.escrowContract, TASK_ESCROW_ABI, signer);
+      
+      // Estimate gas for the transaction
+      let gasLimit;
+      try {
+        gasLimit = await escrow.createTask.estimateGas(
+          `Task for ${depositAmount} ${tokenInfo.name}`,
+          [], // allowedAgents - empty array means anyone can complete the task
+          { value: amountWei }
+        );
+        // Add 20% buffer to gas limit
+        gasLimit = gasLimit * BigInt(120) / BigInt(100);
+      } catch (error) {
+        console.warn('Gas estimation failed, using default:', error);
+        // Fallback gas limits per network
+        switch (theme) {
+          case 'flare':
+            gasLimit = BigInt(300000);
+            break;
+          case 'flow':
+            gasLimit = BigInt(500000); // Higher gas limit for Flow
+            break;
+          default:
+            gasLimit = BigInt(250000);
+        }
+      }
+
+      // Get current gas price
+      const feeData = await provider.getFeeData();
+      let gasPrice = feeData.gasPrice;
+      
+      // Adjust gas price for Flow network
+      if (theme === 'flow' && gasPrice) {
+        gasPrice = gasPrice * BigInt(120) / BigInt(100); // 20% higher gas price for Flow
+      }
+
+      const txOptions: any = {
+        value: amountWei,
+        gasLimit: gasLimit,
+      };
+
+      // Set gas price if available
+      if (gasPrice) {
+        txOptions.gasPrice = gasPrice;
+      }
+
+      console.log('Transaction options:', {
+        value: ethers.formatEther(amountWei),
+        gasLimit: gasLimit.toString(),
+        gasPrice: gasPrice ? ethers.formatUnits(gasPrice, 'gwei') + ' gwei' : 'auto'
+      });
+
+      // Execute transaction
+      const tx = await escrow.createTask(
+        `Task for ${depositAmount} ${tokenInfo.name}`,
+        [], // allowedAgents - empty array means anyone can complete the task
+        txOptions
+      );
+      
+      console.log('Transaction sent:', tx.hash);
+      const receipt = await tx.wait();
+      console.log('Transaction confirmed:', receipt);
+      
+      return receipt;
     }
-
-    // Get current gas price
-    const feeData = await provider.getFeeData();
-    const gasPrice = feeData.gasPrice;
-    
-    const txOptions: any = {
-      value: amountWei,
-      gasLimit: gasLimit,
-    };
-
-    // Set custom gas price for Hedera
-    if (theme === 'hedera' && gasPrice) {
-      txOptions.gasPrice = gasPrice * BigInt(2); // Double the gas price for Hedera
-    }
-
-    console.log('Transaction options:', {
-      value: ethers.formatEther(amountWei),
-      gasLimit: gasLimit.toString(),
-      gasPrice: gasPrice ? ethers.formatUnits(gasPrice, 'gwei') + ' gwei' : 'auto'
-    });
-
-    // Execute transaction
-    const tx = await escrow.createTask(
-      `Task for ${depositAmount} ${tokenInfo.name}`,
-      [], // allowedAgents - empty array means anyone can complete the task
-      txOptions
-    );
-    
-    console.log('Transaction sent:', tx.hash);
-    const receipt = await tx.wait();
-    console.log('Transaction confirmed:', receipt);
-    
-    return receipt;
   };
 
   const handleBack = () => router.push('/agent/choice');
@@ -366,7 +439,53 @@ export default function OnRampCard() {
             </CardHeader>
 
             <CardContent className="flex flex-col gap-4">
-              {!walletAddress ? (
+              {theme === 'hedera' ? (
+                <>
+                  <div className="text-sm mb-2" style={{ color: themeColors.text + 'CC' }}>
+                    Network: {tokenInfo.network}
+                    <div className="text-green-600 mt-1 flex items-center gap-1">
+                      ✅ Using Hedera private key
+                    </div>
+                  </div>
+
+                  <div className="w-full">
+                    <label className="block text-sm font-medium mb-1" style={{ color: themeColors.text }}>
+                      Deposit Amount ({tokenInfo.name})
+                    </label>
+                    <input
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2"
+                      style={{ 
+                        backgroundColor: themeColors.background === '#F8F8F8' ? '#FFFFFF' : '#1A1A1A',
+                        borderColor: themeColors.primary + '40',
+                        color: themeColors.text
+                      }}
+                      placeholder={`Min: ${tokenInfo.minAmount}`}
+                      step="0.01"
+                      min={tokenInfo.minAmount}
+                    />
+                  </div>
+
+                  <Button 
+                    onClick={handleDeposit}
+                    disabled={isLoading}
+                    className="flex items-center justify-center gap-2"
+                    style={{ 
+                      background: themeColors.gradient, 
+                      color: themeColors.background 
+                    }}
+                  >
+                    <SiMetabase className="w-5 h-5" />
+                    {isLoading ? 'Processing...' : 'Create Escrow Task'}
+                  </Button>
+
+                  <div className="text-sm text-center mt-2" style={{ color: themeColors.text + '99' }}>
+                    Funds held securely until task completion
+                  </div>
+                </>
+              ) : !walletAddress ? (
                 <Button 
                   onClick={connectWallet}
                   disabled={isConnecting}
@@ -438,11 +557,11 @@ export default function OnRampCard() {
 
           <button
             onClick={handleNext}
-            disabled={!walletAddress}
+            disabled={theme !== 'hedera' && !walletAddress}
             className={`absolute -right-12 top-1/2 -translate-y-1/2 p-2 rounded-full transition-colors ${
-              walletAddress ? 'hover:bg-gray-100' : 'cursor-not-allowed'
+              (theme === 'hedera' || walletAddress) ? 'hover:bg-gray-100' : 'cursor-not-allowed'
             }`}
-            style={{ color: walletAddress ? themeColors.text : themeColors.text + '40' }}
+            style={{ color: (theme === 'hedera' || walletAddress) ? themeColors.text : themeColors.text + '40' }}
           >
             <ChevronRight className="w-6 h-6" />
           </button>
