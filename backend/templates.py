@@ -1,55 +1,55 @@
 def foodTemplate(address, restaurantName, item):
+    task = f"""
+    1. Navigate to https://wolt.com
+    2. Click the location pin icon.
+    3. Click "Add new address".
+    4. Enter "{address}" into the "Street name and number" input field and press Enter.
+    5. Click the "Continue" button.
+    6. In the location selection, click the "Choose" button for the "Other" (fourth) option.
+    7. In the "Address details" box, enter "{address}" and press Enter.
+    8. Click the "Search in Wolt..." search bar.
+    9. Enter "{restaurantName}" and press Enter.
+    10. From the search results, find and click the result that exactly matches "{restaurantName}".
+    11. On the restaurant page, click the search bar and enter "{item}", then press Enter.
+    12. Scroll and click the menu item that matches "{item}".
+    13. Click the "Add to order" button.
+    14. Click "View Order" in the top-right corner.
+    15. Click "Go to checkout".
+    16. Click the "Click to order" button.
+    17. Click "Share tracking".
+    18. Copy the visible tracking URL (starting with https://track.wolt.com).
+    19. Navigate to the copied tracking URL.
+    """
+    return task
 
-     task=f'''
-        1. Go to Wolt.com
-        2. Click the location blip icon
-        3. Click Add new address
-        4. In the Street name and number input enter {address} and then click Enter
-        5. Click Continue
-        6. On the location selection click on the Chose button for Other the fourth option
-        7. In the Address details box enter {address} and then press enter
-        8. Click on the Search in Wolt... search bar
-        9. Enter {restaurantName} and then search (press enter)
-        10. DO NOT SCROLL YET, from the available options, identify the option in the list that has the text {restaurantName} then click it
-        11. Click on the Search in Mcdonalds search bar and enter {item}
-        12. Scoll down and Click on the button that matches {item} 
-        12. Click "Add to order"
-        13. Now click the "View Order" on the top right of the page
-        14. Click Go to checkout
-        15. Now find and click the "Click to order" button
-        16. Click Share tracking
-        17. Save the entire track.wolt.com url visible on screen and then navigate to it
-        '''
-     
-     return task
 
 def flightTemplate(toCity, fromCity, date, firstName, lastName, dateOfBirth, email, phoneNumber):
-
-     task=f'''
-        1. Go to www.lufthansa.com/cz/en/homepage
-        2. On the "Round trip" drop down click it and select "One-way" instead
-        3. Click the text input below "From" if it is filled with Frankfurt press the delete x button once the input is cleared enter {fromCity} and press enter
-        4. Click the To text input and type {toCity} then press enter
-        5. Click on the "Departure" button
-        6. Click on the date {date} then scroll down and then click on the "Continue" button
-        8. Click on the "Search Flights" button
-        9. Scroll down and select the first available flight and click its "Economy" option button
-        10. Click on the "Select" button of Economy Light you may need to scroll down
-        11. Click on the "Enter Passanger Details Button"
-        12. Click on the "Countinue" button or the passangers page
-        13. Click on the "Economy" select button
-        14. Scroll down and then click on the Economy Zero orange arrow button
-        15. Click on the "Countinue with selected flights" button
-        16. Click on the "Mr." option in the "Title" dropdown
-        17. Enter in the "First name" text input the name {firstName}
-        18. Enter in the "Last name" text input the name {lastName}
-        19. Enter in the "Date of Birth" text input this exactly {dateOfBirth}
-        20. Click on the "Male" gender button
-        21. Enter in the "Email" text input {email} you may need to scroll down
-        22. In the "Country calling code" dropdown search for Canada and select it
-        23. Enter in the "Phone" text input {phoneNumber}
-        24. Click on the "Confim" button
-        24. Scroll down until the "Continue to payment" button and click it
-        '''
-     
-     return task
+    task = f"""
+    1. Navigate to https://www.lufthansa.com/cz/en/homepage
+    2. Click the "Round trip" dropdown and select "One-way".
+    3. Click the "From" input. If "Frankfurt" is present, click the "X" to clear it.
+    4. Enter "{fromCity}" into the "From" input and press Enter.
+    5. Enter "{toCity}" into the "To" input and press Enter.
+    6. Click the "Departure" date selector.
+    7. Select the date "{date}".
+    8. Click the "Continue" button.
+    9. Click the "Search Flights" button.
+    10. Scroll to the results and click the "Economy" button on the first available flight.
+    11. Click the "Select" button for "Economy Light".
+    12. Click the "Enter Passenger Details" button.
+    13. Click the "Continue" button on the passenger page.
+    14. Click the "Economy" option again.
+    15. Scroll and click the orange arrow button for "Economy Zero".
+    16. Click the "Continue with selected flights" button.
+    17. In the "Title" dropdown, select "Mr.".
+    18. Enter "{firstName}" in the "First name" input.
+    19. Enter "{lastName}" in the "Last name" input.
+    20. Enter "{dateOfBirth}" in the "Date of Birth" input.
+    21. Select "Male" as the gender.
+    22. Enter "{email}" in the "Email" input.
+    23. In the "Country calling code" dropdown, search for and select "Canada".
+    24. Enter "{phoneNumber}" in the "Phone" input.
+    25. Click the "Confirm" button.
+    26. Scroll down and click the "Continue to payment" button.
+    """
+    return task
