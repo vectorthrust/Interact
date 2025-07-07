@@ -42,7 +42,7 @@ async def websocket_agent(websocket: WebSocket):
             item = data["details"]["item"]
 
             formattedTask = foodTemplate(address, restaurantName, item)
-        if data["taskType"] == "flight":
+        elif data["taskType"] == "flight":
             toCity = data["details"]["toCity"]
             fromCity = data["details"]["fromCity"]
             date = data["details"]["date"]
